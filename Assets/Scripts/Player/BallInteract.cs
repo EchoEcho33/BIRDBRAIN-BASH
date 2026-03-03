@@ -11,7 +11,12 @@ public class BallInteract : MonoBehaviour
     [Header("Ball Manager")]
     public BallManager ballManager; // Manager of the ball
     public float interactionRadius = 5f; // How far the ball can be from the player to interact with it
+
+    [Header("Spike Stat")]
+    public float spikeStat; //Spiking power for the bird
     
+    [SerializeField] private BirdType birdType; // Type of the bird for audio noises
+    private Transform contactPoint; // Reference for interaction radius
     private GameObject ball; // Game object for the ball
     private Rigidbody ballRb; // Rigid body for the ball
     private Vector3 bumpToLocation; // Where the ball will go after bumping
@@ -19,14 +24,15 @@ public class BallInteract : MonoBehaviour
     private Vector3 spikeToLocation; // Where the ball will go after spiking
     private Vector3 serveToLocation; // Where the ball will go after spiking
     private Vector3 blockToLocation; // Where the ball will go after blocking
-    private float spikeSpeed; // Speed of the ball when spiked
     private CharacterMovement serverMovement; //Christofort: Track the server's movement from character movement script
+    private float baseSpikeSpeed; // Speed of the ball when spiked
+
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         serverMovement = GetComponent<CharacterMovement>(); // christofort: gets the character movement script
-        spikeSpeed = 10.0f;
+        baseSpikeSpeed = 10.0f;
         
         ball = GameObject.FindGameObjectWithTag("Ball");
         if (ball != null)
@@ -46,6 +52,17 @@ public class BallInteract : MonoBehaviour
         {
             Debug.LogError("Ball Manager was not set in inspector for BallInteract!");
         }
+
+        if (gameManager == null)
+        {
+            Debug.LogError("Game manager was not found in BallInteract!");
+        }
+
+        contactPoint = transform.Find("ContactPoint").transform;
+        if (contactPoint == null)
+        {
+            Debug.LogErrorFormat("Could not find contact point for {0}.", transform.name);
+        }
     }
 
     // If the player is near the ball
@@ -53,7 +70,7 @@ public class BallInteract : MonoBehaviour
     {
         if (ball == null) return false;
         
-        float distance = Vector3.Distance(transform.position, ball.transform.position);
+        float distance = Vector3.Distance(contactPoint.position, ball.transform.position);
         return distance <= interactionRadius;
     }
 
@@ -71,6 +88,15 @@ public class BallInteract : MonoBehaviour
     // Check the game state in relation to the player
     private void CheckState()
     {
+        // Offensive ability activation (Toucan): allow activation regardless of CanHit()
+        if (InputSystem.actions.FindAction("Offensive Ability").WasPressedThisFrame())
+        {
+            ToucanOffensive toucan = GetComponent<ToucanOffensive>();
+            if (toucan != null)
+            {
+                toucan.TouCanDoIt();
+            }
+        }
         // If the player can hit the ball
         if (CanHit())
         {
@@ -136,6 +162,9 @@ public class BallInteract : MonoBehaviour
     // Check if the player can hit the ball
     private bool CanHit()
     {
+        // If the point has ended, they cannot hit the ball
+        if (gameManager.gameState.Equals(GameManager.GameState.PointEnd)) return false;
+        
         // If this player just hit the ball, they cannot hit it again
         if (gameObject.Equals(gameManager.lastHit)) return false;
 
@@ -169,6 +198,11 @@ public class BallInteract : MonoBehaviour
         // Set the ball's intial velocity and destination
         SetBallInitVelocity(ballRb, bumpToLocation, 5.0f);
         ballManager.goingTo = bumpToLocation;
+        ballManager.offCourse = false;
+
+        // Play the bump sound for the bird
+        AudioManager.PlayBirdSound(birdType, SoundType.BUMP, 1.0f);
+        AudioManager.PlayBallPlayerInteractionSound();
 
         // Update game manager fields
         gameManager.gameState = GameManager.GameState.Bumped;
@@ -180,10 +214,15 @@ public class BallInteract : MonoBehaviour
     private void SetBall()
     {
         // Set the setting location to middle of court as default
-        setToLocation = bumpToLocation;
+        setToLocation = new Vector3(2f, 0f, 0f);
+        if (onLeft)
+        {
+            setToLocation *= -1;
+        }
 
         // Get the direction value
         Vector2 dir = InputSystem.actions.FindAction("Direction").ReadValue<Vector2>();
+        Debug.LogFormat("ServeToLocation before checking direction: {0}", setToLocation);
 
         // If player wants to set towards top or bottom, update set to location
         if (dir.y < -0.64f)
@@ -194,10 +233,16 @@ public class BallInteract : MonoBehaviour
         {
             setToLocation += new Vector3(0, 0, 4); // Upper side of the court
         }
+        Debug.LogFormat("ServeToLocation after checking direction: {0}", setToLocation);
 
         // Set the ball's initial velocity and destination
         SetBallInitVelocity(ballRb, setToLocation, 5.0f);
         ballManager.goingTo = setToLocation;
+        ballManager.offCourse = false;
+
+        // Play the set sound for the bird
+        AudioManager.PlayBirdSound(birdType, SoundType.SET, 1.0f);
+        AudioManager.PlayBallPlayerInteractionSound();
 
         // Update game manager fields
         gameManager.gameState = GameManager.GameState.Set;
@@ -232,6 +277,20 @@ public class BallInteract : MonoBehaviour
         // Set the ball's initial velocity and destination
         SetBallInitVelocity(ballRb, spikeToLocation, -1.0f);
         ballManager.goingTo = spikeToLocation;
+        ballManager.offCourse = false;
+
+        // If this player has an offensive Toucan ability active, mark this spike unblockable
+        ToucanOffensive toucan = GetComponent<ToucanOffensive>();
+        if (toucan != null && toucan.abilityActive)
+        {
+            if (ballManager != null) ballManager.unblockableOwner = gameObject;
+            toucan.abilityActive = false; // consume ability on spike
+            Debug.Log("Spike marked unblockable by Toucan offensive ability.");
+        }
+
+        // Play the spike sound for the bird
+        AudioManager.PlayBirdSound(birdType, SoundType.SPIKE, 1.0f);
+        AudioManager.PlayBallPlayerInteractionSound();
 
         // Update game manager fields
         gameManager.gameState = GameManager.GameState.Spiked;
@@ -265,6 +324,10 @@ public class BallInteract : MonoBehaviour
         // Set the ball's initial velocity and destination
         SetBallInitVelocity(ballRb, serveToLocation, 6.0f);
         ballManager.goingTo = serveToLocation;
+        ballManager.offCourse = false;
+
+        // Play sounds
+        AudioManager.PlayBallPlayerInteractionSound();
 
         // Update game manager fields
         gameManager.gameState = GameManager.GameState.Served;
@@ -275,8 +338,21 @@ public class BallInteract : MonoBehaviour
 
     private void BlockBall()
     {
+        // If the incoming spike is marked unblockable, only allow block
+        // when the spike was NOT from the unblockable owner.
+        if (ballManager != null && ballManager.unblockableOwner != null)
+        {
+            // If the last spiker matches the unblockable owner, prevent blocking
+            if (gameManager != null && gameManager.lastHit == ballManager.unblockableOwner)
+            {
+                Debug.Log("Block attempted but spike is unblockable.");
+                return;
+            }
+            // Otherwise fall through and allow the block
+        }
+        
         // sends ball back to attacker's side near the net
-        blockToLocation = new Vector3(6f, 0f, 0f);
+        blockToLocation = new Vector3(-6f, 0f, 0f);
 
         if (onLeft) blockToLocation *= -1;
 
@@ -289,9 +365,10 @@ public class BallInteract : MonoBehaviour
         // want fast and flat arc
         SetBallInitVelocity(ballRb, blockToLocation, -1.0f);
         ballManager.goingTo = blockToLocation;
+        ballManager.offCourse = false;
 
         // Update game state
-        gameManager.gameState = GameManager.GameState.Spiked;
+        gameManager.gameState = GameManager.GameState.Blocked;
         gameManager.lastHit = gameObject;
         gameManager.leftAttack = onLeft;
     }
@@ -338,7 +415,16 @@ public class BallInteract : MonoBehaviour
 
             // Set speed of inital velocity
             initVel.Normalize();
-            initVel *= spikeSpeed;
+
+            // If blocking, want half of the spike speed stuff
+            if (gameManager.gameState.Equals(GameManager.GameState.Blocked))
+            {
+                initVel *= baseSpikeSpeed * (1.0f + spikeStat * 0.1f) * 0.5f; 
+            }
+            else
+            {
+                initVel *= baseSpikeSpeed * (1.0f + spikeStat * 0.1f);  
+            }
 
             // Set the ball's intial velocity
             ballRb.linearVelocity = initVel;
