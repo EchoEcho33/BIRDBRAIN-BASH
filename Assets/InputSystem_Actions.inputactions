@@ -79,6 +79,15 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "Offensive Ability",
+                    "type": "Button",
+                    "id": "a9f3d7f1-1234-4d2a-9abc-0b1c2d3e4f50",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "Serve",
                     "type": "Button",
                     "id": "303ccc88-2025-4e48-a032-356bb05010a1",
@@ -185,6 +194,61 @@
                     "action": "Move",
                     "isComposite": false,
                     "isPartOfComposite": false
+                },
+                {
+                    "name": "2D Vector",
+                    "id": "d1762393-d667-4bf0-a5c3-081e6afe6e34",
+                    "path": "2DVector",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Move",
+                    "isComposite": true,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "up",
+                    "id": "5a73d45c-c962-4309-bd09-65326f4812e3",
+                    "path": "<Keyboard>/upArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Move",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "down",
+                    "id": "0ed80417-a3a5-4bd9-82fb-aaf95673e5b0",
+                    "path": "<Keyboard>/downArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Move",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "left",
+                    "id": "f3094948-4c01-48fb-99d1-0bab24e0661a",
+                    "path": "<Keyboard>/leftArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Move",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "right",
+                    "id": "aee4a239-29de-4c6e-b700-9aa7f6b023ff",
+                    "path": "<Keyboard>/rightArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Move",
+                    "isComposite": false,
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "",
@@ -408,6 +472,28 @@
                 },
                 {
                     "name": "",
+                    "id": "d2b7e2c9-7d8f-4f1a-9a2e-1b2c3d4e5f60",
+                    "path": "<Keyboard>/x",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Offensive Ability",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e3c6f8a1-9b2d-4c3e-abcd-1234567890ab",
+                    "path": "<Gamepad>/rightShoulder",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Offensive Ability",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "f4edb735-6161-4e7f-98ab-88a03dca51a6",
                     "path": "<Keyboard>/z",
                     "interactions": "",
@@ -438,6 +524,17 @@
                     "action": "Block",
                     "isComposite": false,
                     "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e626d71c-3d59-4348-a9e3-c2e164dc0dd5",
+                    "path": "<Gamepad>/buttonEast",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Block",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         },
@@ -458,7 +555,7 @@
                     "name": "Submit",
                     "type": "Button",
                     "id": "7607c7b6-cd76-4816-beef-bd0341cfe950",
-                    "expectedControlType": "",
+                    "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -467,7 +564,7 @@
                     "name": "Cancel",
                     "type": "Button",
                     "id": "15cef263-9014-4fd5-94d9-4e4a6234a6ef",
-                    "expectedControlType": "",
+                    "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -538,7 +635,7 @@
                 {
                     "name": "Pause",
                     "type": "Button",
-                    "id": "0f814271-180d-4942-8265-154680cbdf3f",
+                    "id": "e871daaa-62c3-4053-aa29-269de3df9600",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -966,22 +1063,22 @@
                 },
                 {
                     "name": "",
-                    "id": "26dfccc7-7475-4a7e-8692-918717cc2403",
-                    "path": "<Keyboard>/tab",
+                    "id": "d395e46a-e368-4f2d-9e07-7c77fb523167",
+                    "path": "<Keyboard>/escape",
                     "interactions": "",
                     "processors": "",
-                    "groups": ";Keyboard&Mouse",
+                    "groups": "",
                     "action": "Pause",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
                 {
                     "name": "",
-                    "id": "260712b9-9252-440c-b37b-7d73611a08e8",
+                    "id": "0a193f7a-72b6-470c-82e1-c9d2bfb0189d",
                     "path": "<Gamepad>/start",
                     "interactions": "",
                     "processors": "",
-                    "groups": ";Gamepad",
+                    "groups": "",
                     "action": "Pause",
                     "isComposite": false,
                     "isPartOfComposite": false
