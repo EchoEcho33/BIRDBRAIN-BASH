@@ -212,6 +212,7 @@ public class MultiplayerManager : MonoBehaviour
         BallInteract ballInteract = player.AddComponent<BallInteract>();
         ballInteract.onLeft = playerCount < 2 ? true : false;
         ballInteract.spikeStat = 15.0f;
+        ballInteract.interactionRadius = 2.5f;
 
         // if the selection manager added a bird type, apply it here as well
         if (DataTransferManager.selectedBirds != null && DataTransferManager.selectedBirds.Count > playerCount)
@@ -223,6 +224,28 @@ public class MultiplayerManager : MonoBehaviour
         player.transform.position = playerSpawnpoints[playerCount].position;
         player.transform.rotation = playerSpawnpoints[playerCount].rotation;
         player.transform.name = $"Player {playerCount + 1}";
+
+        // Find the follow object for this player
+        FollowObject fo;
+        if (playerCount == 0)
+        {
+            fo = GameObject.Find("PlayerOneFollow").GetComponent<FollowObject>();
+        }
+        else if (playerCount == 1)
+        {
+            fo = GameObject.Find("PlayerTwoFollow").GetComponent<FollowObject>();
+        }
+        else if (playerCount == 2)
+        {
+            fo = GameObject.Find("PlayerThreeFollow").GetComponent<FollowObject>();
+        }
+        else
+        {
+            fo = GameObject.Find("PlayerFourFollow").GetComponent<FollowObject>();
+        }
+
+        // Set the follow object to this player
+        fo.target = player.transform;
     }
 
     void MakeAI(int playerCount)
@@ -243,18 +266,27 @@ public class MultiplayerManager : MonoBehaviour
         ai.transform.name = $"AI {playerCount - isKBMInput.Count + 1}";
 
         // Assign the ai to its respective spot for the game manager
+        FollowObject fo;
         if (playerCount == 1)
         {
             gameManager.leftPlayer2 = ai;
+            fo = GameObject.Find("PlayerTwoFollow").GetComponent<FollowObject>();
         }
         else if (playerCount == 2)
         {
             gameManager.rightPlayer1 = ai;
+            fo = GameObject.Find("PlayerThreeFollow").GetComponent<FollowObject>();
         }
         else if (playerCount == 3)
         {
             gameManager.rightPlayer2 = ai;
+            fo = GameObject.Find("PlayerFourFollow").GetComponent<FollowObject>();
         }
+        else
+        {
+            fo = GameObject.Find("PlayerOneFollow").GetComponent<FollowObject>();
+        }
+        fo.target = ai.transform;
     }
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
