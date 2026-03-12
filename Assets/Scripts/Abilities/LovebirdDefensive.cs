@@ -28,7 +28,7 @@ public class LovebirdDefensive : MonoBehaviour
 
     public void ActivateAbility()
     {
-        if (abilityReady)
+        if (abilityReady && playerInput.actions.FindAction("Defensive Ability").WasPressedThisFrame())
         {
             StartCoroutine(RomanticRush());
             abilityReady = false;
@@ -68,6 +68,7 @@ public class LovebirdDefensive : MonoBehaviour
         {
             yield break;
         }
+        Debug.Log("Dashing towards ally...");
         // Continues moving as long as the distance is within 1 unit
         while (Vector3.Distance(transform.position, ally.transform.position) > dashToDistance)
         {

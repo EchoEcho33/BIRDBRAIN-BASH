@@ -40,10 +40,13 @@ public class PelicanOffensive : MonoBehaviour
         // Instantiate at the pelican's position and rotation
         GameObject fish = Instantiate(fishPrefab, transform.position + transform.forward, transform.rotation);
         
+        // Account for rotation offset
+        Vector3 forward = Quaternion.Euler(-GetComponent<CharacterMovement>().rotationOffsetEuler) * transform.forward;
+        
         // Add velocity to the fish to make it move forward at an arc so it goes over the net
         if (fish.TryGetComponent<Rigidbody>(out var rb))
         {
-            rb.linearVelocity = transform.forward * slipFishSpeed + Vector3.up * (slipFishSpeed / 2);
+            rb.linearVelocity = forward * slipFishSpeed + Vector3.up * (slipFishSpeed / 2);
         }
 
         // Destroy the fish after its lifetime expires
