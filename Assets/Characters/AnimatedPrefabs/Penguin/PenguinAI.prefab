@@ -7105,7 +7105,7 @@ MonoBehaviour:
   gameManager: {fileID: 0}
   onLeft: 0
   ballManager: {fileID: 0}
-  interactionRadius: 2.5
+  interactionRadius: 1.5
   animator: {fileID: 0}
   maxGroundSpeed: 4
   maxAirSpeed: 2

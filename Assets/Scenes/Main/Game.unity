@@ -249,6 +249,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: b3ab5e2311f51cc40a46064a5d86c382, type: 2}
+  - {fileID: 2100000, guid: fa18a3de483d16d49990c2123e869752, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -5436,9 +5437,9 @@ MonoBehaviour:
   - {fileID: 1958672876}
   - {fileID: 2226016}
   - {fileID: 1233819920}
-  keyboardPrefab: {fileID: 3729416281496813015, guid: be1465057da62a0478d796e5e52e0285, type: 3}
-  gamepadPrefab: {fileID: 7240812010863461761, guid: d616d796861e79d47981dfe734d2d218, type: 3}
-  aiPrefab: {fileID: 6444695336505023820, guid: 3946e951cb6924742873a75a94b547ce, type: 3}
+  keyboardPrefab: {fileID: 8067408739502402168, guid: d159ce1a76704674198c5c0ed703de1d, type: 3}
+  gamepadPrefab: {fileID: 8379060495865577183, guid: 5237adce10f0ed6498eff4b789f2e10f, type: 3}
+  aiPrefab: {fileID: 7155783748839112206, guid: 28879bb1223b8d24781e5c885e5d59e1, type: 3}
   gameManager: {fileID: 614297107}
 --- !u!114 &1347761771
 MonoBehaviour:
@@ -8344,9 +8345,21 @@ PrefabInstance:
       value: 90
       objectReference: {fileID: 0}
     - target: {fileID: 6784181990874536643, guid: 5237adce10f0ed6498eff4b789f2e10f, type: 3}
+      propertyPath: ball
+      value: 
+      objectReference: {fileID: 18352587}
+    - target: {fileID: 6784181990874536643, guid: 5237adce10f0ed6498eff4b789f2e10f, type: 3}
+      propertyPath: side1Tag
+      value: Side1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6784181990874536643, guid: 5237adce10f0ed6498eff4b789f2e10f, type: 3}
+      propertyPath: side2Tag
+      value: Side2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6784181990874536643, guid: 5237adce10f0ed6498eff4b789f2e10f, type: 3}
       propertyPath: dodgeBall
       value: 
-      objectReference: {fileID: 18352592}
+      objectReference: {fileID: 18352587}
     - target: {fileID: 6784181990874536643, guid: 5237adce10f0ed6498eff4b789f2e10f, type: 3}
       propertyPath: gameManager
       value: 
@@ -8355,6 +8368,10 @@ PrefabInstance:
       propertyPath: ballCollider
       value: 
       objectReference: {fileID: 18352589}
+    - target: {fileID: 6784181990874536643, guid: 5237adce10f0ed6498eff4b789f2e10f, type: 3}
+      propertyPath: penguinTeamSideTag
+      value: Side1
+      objectReference: {fileID: 0}
     - target: {fileID: 8379060495865577183, guid: 5237adce10f0ed6498eff4b789f2e10f, type: 3}
       propertyPath: m_Name
       value: PenguinC
@@ -8377,9 +8394,9 @@ Transform:
   m_GameObject: {fileID: 5003563274639455241}
   serializedVersion: 2
   m_LocalRotation: {x: 0.000000021855694, y: 0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.00000029802322, y: 3.0243654, z: 34.275352}
-  m_LocalScale: {x: 6.4191422, y: 6.4191422, z: 121.068886}
-  m_ConstrainProportionsScale: 0
+  m_LocalPosition: {x: 0.00000029802322, y: 2.26, z: 32.03}
+  m_LocalScale: {x: 5, y: 5, z: 94.30301}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1791117048}
   - {fileID: 1325747969}
@@ -8404,6 +8421,10 @@ PrefabInstance:
       propertyPath: gameManager
       value: 
       objectReference: {fileID: 614297107}
+    - target: {fileID: 2439993319741574366, guid: 28879bb1223b8d24781e5c885e5d59e1, type: 3}
+      propertyPath: interactionRadius
+      value: 2.5
+      objectReference: {fileID: 0}
     - target: {fileID: 2952640754680161921, guid: 28879bb1223b8d24781e5c885e5d59e1, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -8850,7 +8871,7 @@ GameObject:
   - component: {fileID: 6898290019998675479}
   m_Layer: 0
   m_Name: Net
-  m_TagString: Untagged
+  m_TagString: Net
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -9937,9 +9958,21 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8587256584720762441, guid: d159ce1a76704674198c5c0ed703de1d, type: 3}
+      propertyPath: ball
+      value: 
+      objectReference: {fileID: 18352587}
+    - target: {fileID: 8587256584720762441, guid: d159ce1a76704674198c5c0ed703de1d, type: 3}
+      propertyPath: side1Tag
+      value: Side1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8587256584720762441, guid: d159ce1a76704674198c5c0ed703de1d, type: 3}
+      propertyPath: side2Tag
+      value: Side2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8587256584720762441, guid: d159ce1a76704674198c5c0ed703de1d, type: 3}
       propertyPath: dodgeBall
       value: 
-      objectReference: {fileID: 18352592}
+      objectReference: {fileID: 18352587}
     - target: {fileID: 8587256584720762441, guid: d159ce1a76704674198c5c0ed703de1d, type: 3}
       propertyPath: gameManager
       value: 
@@ -9948,6 +9981,10 @@ PrefabInstance:
       propertyPath: ballCollider
       value: 
       objectReference: {fileID: 18352589}
+    - target: {fileID: 8587256584720762441, guid: d159ce1a76704674198c5c0ed703de1d, type: 3}
+      propertyPath: penguinTeamSideTag
+      value: Side1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

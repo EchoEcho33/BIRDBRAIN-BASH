@@ -51,7 +51,7 @@ public class GameManager : MonoBehaviour
         server = rightPlayer1;
         leftAttack = false;
 
-        // Get all starting positions of players and ball
+        // Assign tags to players for PenguinScript court side detection
         if (leftPlayer1 != null)
         {
             leftPlayer1Origin = leftPlayer1.transform.position;
