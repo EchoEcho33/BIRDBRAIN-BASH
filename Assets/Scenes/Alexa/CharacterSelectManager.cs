@@ -259,7 +259,7 @@ public class CharacterSelectManager : MonoBehaviour
                 state.inputDirection = pad.leftStick.ReadValue();
 
                 // Update cursor position
-                float moveSpeed = 500f * Time.deltaTime;
+                float moveSpeed = 1000f * Time.deltaTime;
                 state.cursorPosition += state.inputDirection * moveSpeed;
 
                 // Clamp to screen bounds

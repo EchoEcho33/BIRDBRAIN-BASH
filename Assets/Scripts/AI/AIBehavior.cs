@@ -10,7 +10,7 @@ public class AIBehavior : MonoBehaviour
 
     [Header("Ball Manager")]
     public BallManager ballManager; // Script that manages ball collisions
-    public float interactionRadius = 5f; // How far the character can interact with the ball
+    public float interactionRadius = 2f; // How far the character can interact with the ball
 
     [Header("Animation")]
     public Animator animator; // Animator component for controlling animations

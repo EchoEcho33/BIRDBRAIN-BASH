@@ -14,9 +14,9 @@ public class Slipping : MonoBehaviour
         
     }
     // used to ensure that the player is slipping on the slippery surface and not just walking on it
-    void onTriggerStay(Collider other)
+    void OnTriggerStay(Collider other)
     {
-        if (other.gameObject.tag == "Player")
+        if (other.gameObject.tag == "Player" || other.gameObject.tag == "AI")
         {
             other.gameObject.GetComponent<Rigidbody>().AddForce(transform.forward * 10f, ForceMode.Acceleration);
         }

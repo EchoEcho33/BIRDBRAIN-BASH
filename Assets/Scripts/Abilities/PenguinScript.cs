@@ -34,7 +34,7 @@ public class PenguinScript : BirdAbility
     private bool iceSpawned = false; // Christofort: track if ice has been spawned to prevent multiple spawns
     private GameManager.GameState currentState; // Christofort: var for the gameState
     private GameManager.GameState stateCheck; // Christofort: to check the current gameState
-    public Transform dodgeBall; // Christofort: grabs the dodgeball's position
+    public GameObject dodgeBall; // Christofort: grabs the dodgeball's position
     public Collider ballCollider; // Christofort: grabs the dodgeball's collider
     public BoxCollider iceCollider; // Christofort: grabs the ice's collider
     Vector3 spawnPoint; // Christofort: where to spawn the Dodgeball
@@ -43,7 +43,13 @@ public class PenguinScript : BirdAbility
     [Header("Snowball Visual")]
     public Material normalBallMaterial; // Default ball material to restore after snowball ends
     public Material snowballMaterial; // Material to apply to the ball when snowball is active
-    private Renderer dodgeBallRenderer; // Christofort: grabs the dodgeball's renderer to swap materials
+    private Renderer[] dodgeBallRenderers; // Christofort: grabs the dodgeball's renderer to swap materials
+
+    // New: keep track of the active coroutine so we can actually stop it correctly
+    private Coroutine spawnIceCoroutine;
+
+    // New: optional flag in case the ball hits the net first
+    private bool hitNet = false;
 
 
     void Start()
@@ -62,12 +68,28 @@ public class PenguinScript : BirdAbility
             gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
 
         // Subscribe to ball collision event if ballManager is available
-        // if (ballManager != null)
-        //     ballManager.onBallCollision += spawnIceOnEnemy;
+        if (ballManager != null)
+            ballManager.onBallCollision += checkNetCollision;
 
+        // Ensure dodgeBall is assigned at runtime if not set in inspector
+        if (dodgeBall == null)
+        {
+            dodgeBall = GameObject.FindWithTag("Ball"); // Try to find by tag
+            if (dodgeBall == null)
+            {
+                Debug.LogWarning("dodgeBall reference is still null after runtime search. Please check assignment in inspector and scene.", this);
+            }
+            else
+            {
+                Debug.Log("dodgeBall reference assigned at runtime.", this);
+            }
+        }
         if (dodgeBall != null)
         {
-            dodgeBallRenderer = dodgeBall.GetComponent<Renderer>();
+            // Christofort: grab all renderers on the dodgeball object and its children
+            dodgeBallRenderers = dodgeBall.GetComponentsInChildren<Renderer>();
+            if (dodgeBallRenderers == null || dodgeBallRenderers.Length == 0)
+                Debug.LogWarning("Could not find any dodgeBall renderers in Start()", this);
         }
     }
 
@@ -141,7 +163,7 @@ public class PenguinScript : BirdAbility
             }
         }
 
-        if (dodgeBall != null) spawnPoint = dodgeBall.position;
+        if (dodgeBall != null) spawnPoint = dodgeBall.transform.position;
     }
 
 
@@ -150,14 +172,28 @@ public class PenguinScript : BirdAbility
         characterMovement.controlMovement(true, false); // christofort: makes canJump false
         isDashing = true;
         dashTimer = dashDuration;
-        // Apply forward force in the direction penguin is currently facing
-        rb.AddForce(transform.forward * dashSpeed, ForceMode.Impulse);
+        // Apply forward force in the direction penguin is currently facing, accounting for rotation offset (sideways prefab)
+        Vector3 slideDirection = transform.forward;
+        if (characterMovement != null)
+        {
+            Vector3 offset = characterMovement.rotationOffsetEuler;
+            // Add 180 degrees to Y to invert the direction
+            offset.y += 180f;
+            slideDirection = (transform.rotation * Quaternion.Euler(offset)) * Vector3.forward;
+        }
+        rb.AddForce(slideDirection.normalized * dashSpeed, ForceMode.Impulse);
+
+        // Trigger dash animation if animator exists
+        if (characterMovement != null && characterMovement.animator != null)
+        {
+            characterMovement.animator.SetTrigger("Dash");
+        }
 
         // Override CharacterMovement rotation to do belly slide
         if (characterMovement != null)
         {
             characterMovement.overrideRotation = true;
-            characterMovement.targetRotation = transform.rotation * Quaternion.Euler(90, 0, 0);
+            // characterMovement.targetRotation = transform.rotation * Quaternion.Euler(90, 0, 0);
         }
 
         // Play slide sound
@@ -185,35 +221,176 @@ public class PenguinScript : BirdAbility
     {
         iceMode = true;
         usingSnowBall = true;
+        iceSpawned = false; // New: reset spawn flag every time the ability starts
+        hitNet = false; // New: reset net flag every time the ability starts
         iceTimer = iceLength;
+
+        // Christofort: remember the state before the spike happens
+        stateCheck = gameManager != null ? gameManager.gameState : GameManager.GameState.PointStart;
+
         ballInteraction.SpikeBall();
-        currentState = GameManager.GameState.Spiked;
-        stateCheck = currentState;
         Debug.Log("Snow Ball Used", this);
+
+        // New: stop any old coroutine before starting a new one
+        if (spawnIceCoroutine != null)
+        {
+            StopCoroutine(spawnIceCoroutine);
+            spawnIceCoroutine = null;
+        }
 
         // will spawn ice after the conditions in the coroutine are confirmed true
         if (iceMode && !iceSpawned)
-            StartCoroutine(spawnIce());
+            spawnIceCoroutine = StartCoroutine(spawnIce());
 
         // Christofort: swap the dodgeball's material to the snowball material
-        if (dodgeBallRenderer != null && snowballMaterial != null)
+        ApplySnowballMaterial();
+    }
+
+    void ApplySnowballMaterial()
+    {
+        // Always refresh renderers before swapping materials
+        if (dodgeBall == null)
         {
-            dodgeBallRenderer.material = snowballMaterial;
+            Debug.LogError("dodgeBall reference is null in ApplySnowballMaterial", this);
+            return;
         }
+        dodgeBallRenderers = dodgeBall.GetComponentsInChildren<Renderer>();
+        Debug.Log($"ApplySnowballMaterial: dodgeBallRenderers count = {dodgeBallRenderers?.Length}", this);
+        Debug.Log($"ApplySnowballMaterial: snowballMaterial reference = {(snowballMaterial != null ? snowballMaterial.name : "null")}", this);
+
+        if (dodgeBallRenderers == null || dodgeBallRenderers.Length == 0)
+        {
+            Debug.LogError("No renderers found on dodgeBall in ApplySnowballMaterial", this);
+            return;
+        }
+        if (snowballMaterial == null)
+        {
+            Debug.LogError("snowballMaterial reference is null in ApplySnowballMaterial", this);
+            return;
+        }
+        foreach (Renderer rend in dodgeBallRenderers)
+        {
+            if (rend != null)
+            {
+                rend.material = snowballMaterial;
+                Debug.Log($"Applied snowball material to {rend.gameObject.name}", this);
+            }
+            else
+            {
+                Debug.LogWarning("Renderer is null in ApplySnowballMaterial loop", this);
+            }
+        }
+        Debug.Log("Snowball material applied to all renderers", this);
+    }
+
+    void RestoreNormalBallMaterial()
+    {
+        // Always refresh renderers before restoring materials
+        if (dodgeBall == null)
+        {
+            Debug.LogError("dodgeBall reference is null in RestoreNormalBallMaterial", this);
+            return;
+        }
+        dodgeBallRenderers = dodgeBall.GetComponentsInChildren<Renderer>();
+        Debug.Log($"RestoreNormalBallMaterial: dodgeBallRenderers count = {dodgeBallRenderers?.Length}", this);
+        Debug.Log($"RestoreNormalBallMaterial: normalBallMaterial reference = {(normalBallMaterial != null ? normalBallMaterial.name : "null")}", this);
+
+        if (dodgeBallRenderers == null || dodgeBallRenderers.Length == 0)
+        {
+            Debug.LogError("No renderers found on dodgeBall in RestoreNormalBallMaterial", this);
+            return;
+        }
+        if (normalBallMaterial == null)
+        {
+            Debug.LogError("normalBallMaterial reference is null in RestoreNormalBallMaterial", this);
+            return;
+        }
+        foreach (Renderer rend in dodgeBallRenderers)
+        {
+            if (rend != null)
+            {
+                rend.material = normalBallMaterial;
+                Debug.Log($"Restored normal material to {rend.gameObject.name}", this);
+            }
+            else
+            {
+                Debug.LogWarning("Renderer is null in RestoreNormalBallMaterial loop", this);
+            }
+        }
+        Debug.Log("Normal ball material restored to all renderers", this);
     }
 
     IEnumerator spawnIce()
     {
-        yield return new WaitUntil(() => currentState != stateCheck);
+        // New: wait until the snowball gets touched by someone and the state becomes
+        // either Bumped or Blocked. These are the states that mean the other side made contact.
+        yield return new WaitUntil(() =>
+            usingSnowBall &&
+            gameManager != null &&
+            gameManager.lastHit != null &&
+            (gameManager.gameState == GameManager.GameState.Bumped ||
+            gameManager.gameState == GameManager.GameState.Blocked));
+
+        // New: if the snowball got canceled while waiting, stop here
+        if (!usingSnowBall || gameManager == null || gameManager.lastHit == null)
+            yield break;
+
+        // New: make sure the player who touched it is actually on the opposing team
+        if (!IsOpponentPlayer(gameManager.lastHit))
+            yield break;
 
         if (!iceSpawned)
         {
-            Debug.Log("State Changed", this);
-            iceInstance = Instantiate(tempIce, new Vector3(spawnPoint.x, 0, spawnPoint.z), Quaternion.identity);
-            iceSpawned = true; // Set flag to indicate ice has been spawned
-            Debug.Log("Ice Spawned", this);
+            Debug.Log("Valid opponent contact detected", this);
+
+            // New: spawn the ice under the opposing player who last touched the ball
+            Vector3 hitterPos = gameManager.lastHit.transform.position;
+            Vector3 iceSpawnPos = new Vector3(hitterPos.x, 0, hitterPos.z);
+
+            iceInstance = Instantiate(tempIce, iceSpawnPos, Quaternion.identity);
+            iceSpawned = true;
+            Debug.Log("Ice Spawned under opposing player", this);
+
             iceCollider = iceInstance.GetComponent<BoxCollider>();
-            Physics.IgnoreCollision(ballCollider, iceCollider, true);
+            if (ballCollider != null && iceCollider != null)
+                Physics.IgnoreCollision(ballCollider, iceCollider, true);
+
+            // New: revert the ball texture as soon as the ice spawns
+            Debug.Log("Reverting ball material after ice spawns", this);
+            RestoreNormalBallMaterial();
+        }
+
+        spawnIceCoroutine = null;
+    }
+
+    bool IsOpponentPlayer(GameObject player)
+    {
+        if (gameManager == null || player == null)
+        {
+            Debug.Log("IsOpponentPlayer: gameManager or player is null", this);
+            return false;
+        }
+
+        // Always return true if game state is Blocked or Bumped
+        if (gameManager.gameState == GameManager.GameState.Blocked || gameManager.gameState == GameManager.GameState.Bumped)
+        {
+            Debug.Log($"IsOpponentPlayer: gameState is {gameManager.gameState}, returning true", this);
+            return true;
+        }
+        Debug.Log($"IsOpponentPlayer: gameState is {gameManager.gameState}, returning false", this);
+        return false;
+    }
+
+    // New: optional net catch in case the ball hits the net first
+    void checkNetCollision(Collision colInfo)
+    {
+        if (!usingSnowBall || colInfo == null)
+            return;
+
+        if (colInfo.gameObject.CompareTag("Net"))
+        {
+            hitNet = true;
+            Debug.Log("Snowball hit the net first, ignoring until valid Blocked/Spiked state", this);
         }
     }
 
@@ -232,10 +409,17 @@ public class PenguinScript : BirdAbility
 
     void endSnowBall()
     {
-        StopCoroutine(spawnIce());
+        // New: stop the active coroutine properly
+        if (spawnIceCoroutine != null)
+        {
+            StopCoroutine(spawnIceCoroutine);
+            spawnIceCoroutine = null;
+        }
+
         iceMode = false;
-        iceSpawned = false; 
+        iceSpawned = false;
         usingSnowBall = false;
+        hitNet = false; // New: reset net flag
         snowBallTimer = snowBallCooldown;
         Debug.Log("endSnowBall used", this);
 
@@ -246,32 +430,30 @@ public class PenguinScript : BirdAbility
         iceInstance = null;
         Debug.LogFormat("Ice instance is null: {0}", iceInstance == null);
 
-        // Christofort: restore the dodgeball's material back to normal
-        if (dodgeBallRenderer != null && normalBallMaterial != null)
-        {
-            dodgeBallRenderer.material = normalBallMaterial;
-        }
+        RestoreNormalBallMaterial();
     }
 
 
     private void OnEnable()
     {
         Debug.Log("Signal Received", this);
+
         // Christofort: Check if ballManager exists first to avoid errors
-        // if (ballManager != null)
-        //     ballManager.onBallCollision += spawnIceOnEnemy;
+        if (ballManager != null)
+            ballManager.onBallCollision += checkNetCollision;
     }
 
     private void OnDisable()
     {
         Debug.Log("Signal Revoked", this);
-        // if (ballManager != null)
-        //     ballManager.onBallCollision -= spawnIceOnEnemy;
+
+        if (ballManager != null)
+            ballManager.onBallCollision -= checkNetCollision;
     }
 
     private void OnDestroy()
     {
-        // if (ballManager != null)
-        //     ballManager.onBallCollision -= spawnIceOnEnemy;
+        if (ballManager != null)
+            ballManager.onBallCollision -= checkNetCollision;
     }
 }

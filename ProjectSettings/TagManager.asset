@@ -9,6 +9,9 @@ TagManager:
   - Ball
   - Coin
   - Out
+  - Net
+  - PlayerSide1
+  - PlayerSide2
   layers:
   - Default
   - TransparentFX
