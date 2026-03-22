@@ -5437,8 +5437,6 @@ MonoBehaviour:
   - {fileID: 1958672876}
   - {fileID: 2226016}
   - {fileID: 1233819920}
-  keyboardPrefab: {fileID: 8067408739502402168, guid: d159ce1a76704674198c5c0ed703de1d, type: 3}
-  gamepadPrefab: {fileID: 8379060495865577183, guid: 5237adce10f0ed6498eff4b789f2e10f, type: 3}
   aiPrefab: {fileID: 7155783748839112206, guid: 28879bb1223b8d24781e5c885e5d59e1, type: 3}
   gameManager: {fileID: 614297107}
 --- !u!114 &1347761771
@@ -8531,6 +8529,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1033467020778548164, guid: cfd24999e11904b47b4de1f28213bf4d, type: 3}
+      propertyPath: fishPrefab
+      value: 
+      objectReference: {fileID: 224960317418849905, guid: 64371aa2b1c88cc4a91f37951578e322, type: 3}
+    - target: {fileID: 1033467020778548164, guid: cfd24999e11904b47b4de1f28213bf4d, type: 3}
+      propertyPath: mouthUpOffset
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 2488521229854801172, guid: cfd24999e11904b47b4de1f28213bf4d, type: 3}
       propertyPath: ball
       value: 
@@ -10238,6 +10244,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1052788830305316458, guid: c0751f0407021924080687570685d65e, type: 3}
+      propertyPath: fishPrefab
+      value: 
+      objectReference: {fileID: 224960317418849905, guid: 64371aa2b1c88cc4a91f37951578e322, type: 3}
+    - target: {fileID: 1052788830305316458, guid: c0751f0407021924080687570685d65e, type: 3}
+      propertyPath: mouthUpOffset
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 5027722345375699737, guid: c0751f0407021924080687570685d65e, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

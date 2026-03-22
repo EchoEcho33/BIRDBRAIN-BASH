@@ -7,6 +7,9 @@ using UnityEngine.InputSystem;
 // (fish will disappear after 15s) (15s cooldown after fish disappears)
 public class PelicanOffensive : BirdAbility
 {
+    [Header("Mouth Offset")]
+    [SerializeField] private float mouthForwardOffset = 1.0f;
+    [SerializeField] private float mouthUpOffset = 1.5f;
     [SerializeField]
     private float cooldown = 30f; // Cooldown in seconds (30 because the fish disappears after 15s, so 15s cooldown after that)
     private bool onCooldown = false;
@@ -37,8 +40,19 @@ public class PelicanOffensive : BirdAbility
     {
         if (onCooldown) return;
 
-        // Instantiate at the pelican's position and rotation
-        GameObject fish = Instantiate(fishPrefab, transform.position + transform.forward, transform.rotation);
+        // Play offensive sound
+        AudioManager.PlayBirdSound(BirdType.PELICAN, SoundType.OFFENSIVE, 1.0f);
+
+        // Trigger offensive ability animation if animator exists
+        var myBallInteract = GetComponent<BallInteract>();
+        if (myBallInteract != null && myBallInteract.animator != null)
+        {
+            myBallInteract.animator.SetTrigger("OffensiveAbility");
+        }
+
+        // Instantiate at the pelican's mouth position and rotation
+        Vector3 mouthPos = transform.position + transform.forward * mouthForwardOffset + transform.up * mouthUpOffset;
+        GameObject fish = Instantiate(fishPrefab, mouthPos, transform.rotation);
 
         // Let the fish know which game object is the pelican to prevent collisions with it
         fish.GetComponent<SlipFish>().pelican = gameObject;
@@ -49,7 +63,8 @@ public class PelicanOffensive : BirdAbility
         // Add velocity to the fish to make it move forward at an arc so it goes over the net
         if (fish.TryGetComponent<Rigidbody>(out var rb))
         {
-            rb.linearVelocity = forward * slipFishSpeed + Vector3.up * (slipFishSpeed / 2);
+            // Reduce the upward velocity so the fish falls faster
+            rb.linearVelocity = forward * slipFishSpeed + Vector3.up * (slipFishSpeed / 4);
         }
 
         // Destroy the fish after its lifetime expires
@@ -57,9 +72,6 @@ public class PelicanOffensive : BirdAbility
 
         onCooldown = true;
         StartCoroutine(Cooldown());
-
-        // Play sound effect for spitting fish (TO BE IMPLEMENTED)
-        // AudioSource.PlayClipAtPoint(spitSound, transform.position);
     }
 
     private System.Collections.IEnumerator Cooldown()
