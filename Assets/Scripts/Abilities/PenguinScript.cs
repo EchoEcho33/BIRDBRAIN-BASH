@@ -32,7 +32,6 @@ public class PenguinScript : BirdAbility
     private bool iceSpawned = false; // Christofort: track if ice has been spawned to prevent multiple spawns
     private GameManager.GameState currentState; // Christofort: var for the gameState
     private GameManager.GameState stateCheck; // Christofort: to check the current gameState
-    public GameObject dodgeBall; // Christofort: grabs the dodgeball's position
     public Collider ballCollider; // Christofort: grabs the dodgeball's collider
     public BoxCollider iceCollider; // Christofort: grabs the ice's collider
     Vector3 spawnPoint; // Christofort: where to spawn the Dodgeball
@@ -63,26 +62,10 @@ public class PenguinScript : BirdAbility
         // Subscribe to ball collision event if ballManager is available
         BallManager.Instance.onBallCollision += checkNetCollision;
 
-        // Ensure dodgeBall is assigned at runtime if not set in inspector
-        if (dodgeBall == null)
-        {
-            dodgeBall = GameObject.FindWithTag("Ball"); // Try to find by tag
-            if (dodgeBall == null)
-            {
-                Debug.LogWarning("dodgeBall reference is still null after runtime search. Please check assignment in inspector and scene.", this);
-            }
-            else
-            {
-                Debug.Log("dodgeBall reference assigned at runtime.", this);
-            }
-        }
-        if (dodgeBall != null)
-        {
-            // Christofort: grab all renderers on the dodgeball object and its children
-            dodgeBallRenderers = dodgeBall.GetComponentsInChildren<Renderer>();
-            if (dodgeBallRenderers == null || dodgeBallRenderers.Length == 0)
-                Debug.LogWarning("Could not find any dodgeBall renderers in Start()", this);
-        }
+        // Christofort: grab all renderers on the dodgeball object and its children
+        dodgeBallRenderers = BallManager.Instance.gameObject.GetComponentsInChildren<Renderer>();
+        if (dodgeBallRenderers == null || dodgeBallRenderers.Length == 0)
+            Debug.LogWarning("Could not find any dodgeBall renderers in Start()", this);
     }
 
     void Update()
@@ -156,7 +139,7 @@ public class PenguinScript : BirdAbility
             }
         }
 
-        if (dodgeBall != null) spawnPoint = dodgeBall.transform.position;
+        spawnPoint = BallManager.Instance.gameObject.transform.position;
     }
 
 
@@ -241,12 +224,7 @@ public class PenguinScript : BirdAbility
     void ApplySnowballMaterial()
     {
         // Always refresh renderers before swapping materials
-        if (dodgeBall == null)
-        {
-            Debug.LogError("dodgeBall reference is null in ApplySnowballMaterial", this);
-            return;
-        }
-        dodgeBallRenderers = dodgeBall.GetComponentsInChildren<Renderer>();
+        dodgeBallRenderers = BallManager.Instance.gameObject.GetComponentsInChildren<Renderer>();
         Debug.Log($"ApplySnowballMaterial: dodgeBallRenderers count = {dodgeBallRenderers?.Length}", this);
         Debug.Log($"ApplySnowballMaterial: snowballMaterial reference = {(snowballMaterial != null ? snowballMaterial.name : "null")}", this);
 
@@ -278,12 +256,7 @@ public class PenguinScript : BirdAbility
     void RestoreNormalBallMaterial()
     {
         // Always refresh renderers before restoring materials
-        if (dodgeBall == null)
-        {
-            Debug.LogError("dodgeBall reference is null in RestoreNormalBallMaterial", this);
-            return;
-        }
-        dodgeBallRenderers = dodgeBall.GetComponentsInChildren<Renderer>();
+        dodgeBallRenderers = BallManager.Instance.gameObject.GetComponentsInChildren<Renderer>();
         Debug.Log($"RestoreNormalBallMaterial: dodgeBallRenderers count = {dodgeBallRenderers?.Length}", this);
         Debug.Log($"RestoreNormalBallMaterial: normalBallMaterial reference = {(normalBallMaterial != null ? normalBallMaterial.name : "null")}", this);
 

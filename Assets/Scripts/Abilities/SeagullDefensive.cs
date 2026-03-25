@@ -57,16 +57,9 @@ public class SeagullDefensive : BirdAbility
 
 private bool CanDashToBall()
 {
-    GameObject ball = GameManager.Instance.ball;
-    if (ball == null)
-    {
-        Debug.Log("SeagullDefensive: Ball is null!");
-        return false;
-    }
-
     // Check if ball is on the player's side
     bool onLeft = GetComponent<BallInteract>().onLeft;
-    float ballX = ball.transform.position.x;
+    float ballX = BallManager.Instance.gameObject.transform.position.x;
     bool ballOnMySide = (onLeft && ballX < 0) || (!onLeft && ballX > 0);
 
     if (!ballOnMySide)
@@ -108,14 +101,7 @@ private bool CanDashToBall()
         }
 
         //Check if ball is on the player's side
-        GameObject ball = GameManager.Instance.ball;
-        if (ball == null)
-        {
-            isAbilityReady = true;
-            yield break;
-        }
-
-        bool isBallOnSameSide = Mathf.Sign(ball.transform.position.x) == Mathf.Sign(transform.position.x);
+        bool isBallOnSameSide = Mathf.Sign(BallManager.Instance.gameObject.transform.position.x) == Mathf.Sign(transform.position.x);
         if (!isBallOnSameSide)
         {
             isAbilityReady = true; //ability remains ready
@@ -124,7 +110,7 @@ private bool CanDashToBall()
         
         float fixedY = 0.5f;
         
-        Rigidbody ballRb = ball.GetComponent<Rigidbody>();
+        Rigidbody ballRb = BallManager.Instance.gameObject.GetComponent<Rigidbody>();
 
         //Freeze Y so the dash stays level
         rb.constraints = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionY;

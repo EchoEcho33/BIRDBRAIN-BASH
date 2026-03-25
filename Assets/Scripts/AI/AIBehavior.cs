@@ -28,7 +28,6 @@ public class AIBehavior : MonoBehaviour
     private float directionChangeWeight = 15f; // How quickly the character can change direction
     private bool grounded = false; // If the character is touching the ground
     private Transform contactPoint; // Reference for interact radius
-    private GameObject ball; // The ball in the game
     private Rigidbody ballRb; // The rigidbody of the ball
     private Vector3 bumpToLocation; // Where the ball will go after bumping
     private Vector3 setToLocation; // Where the ball will go after setting
@@ -46,21 +45,13 @@ public class AIBehavior : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        // Get the ball, if its not null, get its rigidbody
-        ball = GameObject.FindGameObjectWithTag("Ball");
-        if (ball != null)
-        {
-            ballRb = ball.GetComponent<Rigidbody>();
+        // Get the ball's rigidbody
+        ballRb = BallManager.Instance.gameObject.GetComponent<Rigidbody>();
 
-            // If the rigidbody is null, log an error
-            if (ballRb == null)
-            {
-                Debug.LogError("Ball rigidbody was not found for AIBehavior!");
-            }
-        }
-        else // Ball is null, log an error
+        // If the rigidbody is null, log an error
+        if (ballRb == null)
         {
-            Debug.LogError("Ball game object was not found for AIBehavior!");
+            Debug.LogError("Ball rigidbody was not found for AIBehavior!");
         }
 
         // Set the spike speed and the amount of time AI takes to serve
@@ -105,7 +96,7 @@ public class AIBehavior : MonoBehaviour
     void Update()
     {
         // If the ball and its rigidbody exist, check the AI's state
-        if (ball != null && ballRb != null)
+        if (ballRb != null)
         {
             CheckState();
         }
@@ -276,18 +267,13 @@ public class AIBehavior : MonoBehaviour
     private bool IsAINearBall()
     {
         // guard against missing references
-        if (ball == null)
-        {
-            Debug.LogWarning("AIBehavior.IsAINearBall called but ball is null");
-            return false;
-        }
         if (contactPoint == null)
         {
             Debug.LogWarning("AIBehavior contactPoint missing");
             return false;
         }
         // Get the distance the AI is from the ball, return whether it is less than or equal that interaction radius
-        float distance = Vector3.Distance(contactPoint.position, ball.transform.position);
+        float distance = Vector3.Distance(contactPoint.position, BallManager.Instance.gameObject.transform.position);
         return distance <= interactionRadius;
     }
     

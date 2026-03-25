@@ -15,13 +15,11 @@ public class GameManager : MonoBehaviour
     public GameObject lastHit; // Player that had the last hit
     public GameObject server; // Player who serves this point
     public bool leftAttack; // If left is attacking
-    public GameObject ball; // Ball object
 
     private Vector3 leftPlayer1Origin; // The position of the 1st player on the left when the game starts
     private Vector3 leftPlayer2Origin; // The position of the 2nd player on the left when the game starts
     private Vector3 rightPlayer1Origin; // The position of the 1st player on the right when the game starts
     private Vector3 rightPlayer2Origin; // The position of the 2nd player on the right when the game starts
-    private Vector3 ballOrigin; // The position of the ball when the game starts
     private Vector3 leftServeLocation; // The positon where the left team will serve from
     private Vector3 rightServeLocation; // The position where the right team will serve from
 
@@ -103,15 +101,6 @@ public class GameManager : MonoBehaviour
             Debug.LogError("Right player 2 not set in inspector for Game Manager!");
         }
 
-        if (ballOrigin != null)
-        {
-            ballOrigin = ball.transform.position;
-        }
-        else
-        {
-            Debug.LogError("Ball origin not set in inspector for Game Manager!");
-        }
-
         // Set the locations for the left and right serve location to be just outside of the court
         leftServeLocation = new Vector3(-10, 1, 0);
         rightServeLocation = new Vector3(10, 1, 0);
@@ -173,22 +162,22 @@ public class GameManager : MonoBehaviour
         instance.leftPlayer2.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
         instance.rightPlayer1.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
         instance.rightPlayer2.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
-        instance.ball.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
+        BallManager.Instance.gameObject.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
 
         // Set server's and ball's position
         if (instance.leftAttack)
         {
             instance.server.transform.position = instance.leftServeLocation;
-            instance.ball.transform.position = instance.leftServeLocation + new Vector3(1, 0, 0);
+            BallManager.Instance.gameObject.transform.position = instance.leftServeLocation + new Vector3(1, 0, 0);
         }
         else
         {
             instance.server.transform.position = instance.rightServeLocation;
-            instance.ball.transform.position = instance.rightServeLocation - new Vector3(1, 0, 0);
+            BallManager.Instance.gameObject.transform.position = instance.rightServeLocation - new Vector3(1, 0, 0);
         }
 
         // Disable gravity for the ball
-        instance.ball.GetComponent<Rigidbody>().useGravity = false;
+        BallManager.Instance.gameObject.GetComponent<Rigidbody>().useGravity = false;
 
         // Reset the game manager fields
         instance.gameState = GameState.PointStart;

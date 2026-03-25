@@ -25,7 +25,6 @@ public class BallInteract : MonoBehaviour
     // EJ: need read-only access to the current bird type for other scripts
     public BirdType GetBirdType() => birdType;
     private Transform contactPoint; // Reference for interaction radius
-    private GameObject ball; // Game object for the ball
     private Rigidbody ballRb; // Rigid body for the ball
     private Vector3 bumpToLocation; // Where the ball will go after bumping
     private Vector3 setToLocation; // Where the ball will go after setting
@@ -44,18 +43,10 @@ public class BallInteract : MonoBehaviour
         playerInput = GetComponent<PlayerInput>();
         baseSpikeSpeed = 10.0f;
         
-        ball = GameObject.FindGameObjectWithTag("Ball");
-        if (ball != null)
+        ballRb = BallManager.Instance.gameObject.GetComponent<Rigidbody>();
+        if (ballRb == null)
         {
-            ballRb = ball.GetComponent<Rigidbody>();
-            if (ballRb == null)
-            {
-                Debug.LogError("Rigidbody for the ball was not found in BallInteract!");
-            }
-        }
-        else
-        {
-            Debug.LogError("Ball game object was not found in BallInteract!");
+            Debug.LogError("Rigidbody for the ball was not found in BallInteract!");
         }
 
         // locate contact point child safely
@@ -89,20 +80,19 @@ public class BallInteract : MonoBehaviour
     // If the player is near the ball
     public bool IsPlayerNearBall()
     {
-        if (ball == null) return false;
         if (contactPoint == null)
         {
             Debug.LogWarning("ContactPoint missing in BallInteract");
             return false;
         }
         
-        float distance = Vector3.Distance(contactPoint.position, ball.transform.position);
+        float distance = Vector3.Distance(contactPoint.position, BallManager.Instance.gameObject.transform.position);
         return distance <= interactionRadius;
     }
 
     private bool IsPlayerNearNet() 
     {
-        return Mathf.Abs(ball.transform.position.x) < 1.5f;
+        return Mathf.Abs(transform.position.x) < 1.5f;
     }
 
     // Update is called once per frame
