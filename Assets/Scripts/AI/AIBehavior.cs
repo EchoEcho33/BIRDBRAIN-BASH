@@ -14,8 +14,7 @@ public class AIBehavior : MonoBehaviour
     [Header("Game Manager")]
     public bool onLeft; // Whether this AI is on the left side of the net or not
 
-    [Header("Ball Manager")]
-    public BallManager ballManager; // Script that manages ball collisions
+    [Header("Ball Interaction")]
     public float interactionRadius = 2f; // How far the character can interact with the ball
 
     [Header("Animation")]
@@ -29,7 +28,6 @@ public class AIBehavior : MonoBehaviour
     private float directionChangeWeight = 15f; // How quickly the character can change direction
     private bool grounded = false; // If the character is touching the ground
     private Transform contactPoint; // Reference for interact radius
-    private GameObject ball; // The ball in the game
     private Rigidbody ballRb; // The rigidbody of the ball
     private Vector3 bumpToLocation; // Where the ball will go after bumping
     private Vector3 setToLocation; // Where the ball will go after setting
@@ -47,30 +45,14 @@ public class AIBehavior : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        // Get the ball, if its not null, get its rigidbody
-        ball = GameObject.FindGameObjectWithTag("Ball");
-        if (ball != null)
-        {
-            ballRb = ball.GetComponent<Rigidbody>();
+        // Get the ball's rigidbody
+        ballRb = BallManager.Instance.gameObject.GetComponent<Rigidbody>();
 
-            // If the rigidbody is null, log an error
-            if (ballRb == null)
-            {
-                Debug.LogError("Ball rigidbody was not found for AIBehavior!");
-            }
-        }
-        else // Ball is null, log an error
+        // If the rigidbody is null, log an error
+        if (ballRb == null)
         {
-            Debug.LogError("Ball game object was not found for AIBehavior!");
+            Debug.LogError("Ball rigidbody was not found for AIBehavior!");
         }
-
-        // Check to see the ball manager was set in the inspector
-        if (ballManager == null)
-        {
-            ballManager = ball.GetComponent<BallManager>();
-
-        }
-    
 
         // Set the spike speed and the amount of time AI takes to serve
         spikeSpeed = 10f;
@@ -114,7 +96,7 @@ public class AIBehavior : MonoBehaviour
     void Update()
     {
         // If the ball and its rigidbody exist, check the AI's state
-        if (ball != null && ballRb != null)
+        if (ballRb != null)
         {
             CheckState();
         }
@@ -168,7 +150,7 @@ public class AIBehavior : MonoBehaviour
             // Check the game state
             switch (GameManager.Instance.gameState)
             {
-                // If the ball was just spiked or served
+                // If the ball was just spiked, served, or blocked
                 case GameManager.GameState.Spiked: case GameManager.GameState.Served: case GameManager.GameState.Blocked:
                     // If the AI is near the ball and the ball is on its way down, bump the ball
                     if (IsAINearBall() && ballRb.linearVelocity.y < 0)
@@ -180,6 +162,18 @@ public class AIBehavior : MonoBehaviour
                         MoveAI(true);
                     }
                     break;
+                // If the ball was just blocked
+                // case GameManager.GameState.Blocked:
+                //     // If the AI is near the ball and the ball is on its way down, bump the ball
+                //     if (IsAINearBall())
+                //     {
+                //         BumpBall();
+                //     }
+                //     else // Just move the AI to get into a position to hit the ball
+                //     {
+                //         MoveAI(true);
+                //     }
+                //     break;
                 // If the ball was just bumped
                 case GameManager.GameState.Bumped:
                     // If the AI is near the ball and the ball is on its way down, bump the ball
@@ -278,25 +272,21 @@ public class AIBehavior : MonoBehaviour
         if (gameManager.leftAttack.Equals(onLeft) && !gameManager.gameState.Equals(GameManager.GameState.Spiked)) return true;
 
         // If the ball is on the other side of the court and has been spiked, they can hit, else they cannot
-        return !gameManager.leftAttack.Equals(onLeft) && gameManager.gameState.Equals(GameManager.GameState.Spiked);
+        return !gameManager.leftAttack.Equals(onLeft)
+            && (gameManager.gameState.Equals(GameManager.GameState.Spiked) || gameManager.gameState.Equals(GameManager.GameState.Blocked));
     }
 
     // Check if the AI is near the ball
     private bool IsAINearBall()
     {
         // guard against missing references
-        if (ball == null)
-        {
-            Debug.LogWarning("AIBehavior.IsAINearBall called but ball is null");
-            return false;
-        }
         if (contactPoint == null)
         {
             Debug.LogWarning("AIBehavior contactPoint missing");
             return false;
         }
         // Get the distance the AI is from the ball, return whether it is less than or equal that interaction radius
-        float distance = Vector3.Distance(contactPoint.position, ball.transform.position);
+        float distance = Vector3.Distance(contactPoint.position, BallManager.Instance.gameObject.transform.position);
         return distance <= interactionRadius;
     }
     
@@ -340,14 +330,14 @@ public class AIBehavior : MonoBehaviour
         if (towardsBall)
         {
             // If the ball is off its course, move towards the ball
-            if (ballManager.offCourse)
+            if (BallManager.Instance.offCourse)
             {
                 target = ballRb.transform.position;
             }
             // Else, move towards where the ball is going to
             else
             {
-                target = ballManager.goingTo;
+                target = BallManager.Instance.goingTo;
             }  
         }
 
@@ -436,11 +426,14 @@ public class AIBehavior : MonoBehaviour
         {
             bumpToLocation *= -1;
         }
+
+        // The ball will be bumped a minimum of five units
+        float height = MathF.Max(5.0f, ballRb.transform.position.y + 3.0f);
         
         // Set the ball's intial velocity and destination
-        SetBallInitVelocity(ballRb, bumpToLocation, 5.0f);
-        ballManager.goingTo = bumpToLocation;
-        ballManager.offCourse = false;
+        SetBallInitVelocity(ballRb, bumpToLocation, height);
+        BallManager.Instance.goingTo = bumpToLocation;
+        BallManager.Instance.offCourse = false;
 
         // Play the bump sound for the bird
         AudioManager.PlayBirdSound(birdType, SoundType.BUMP, 1.0f);
@@ -494,10 +487,13 @@ public class AIBehavior : MonoBehaviour
             setToLocation -= new Vector3(0, 0, 4); // Sets to the lower side of the court
         }
 
+        // The ball will be set a minimum of five units
+        float height = MathF.Max(5.0f, ballRb.transform.position.y + 3.0f);
+
         // Set the ball's initial velocity and destination
-        SetBallInitVelocity(ballRb, setToLocation, 6.0f);
-        ballManager.goingTo = setToLocation;
-        ballManager.offCourse = false;
+        SetBallInitVelocity(ballRb, setToLocation, height);
+        BallManager.Instance.goingTo = setToLocation;
+        BallManager.Instance.offCourse = false;
 
         // Play the set sound for the bird
         AudioManager.PlayBirdSound(birdType, SoundType.SET, 1.0f);
@@ -553,8 +549,8 @@ public class AIBehavior : MonoBehaviour
 
         // Set the ball's initial velocity and destination
         SetBallInitVelocity(ballRb, spikeToLocation, -1.0f);
-        ballManager.goingTo = spikeToLocation;
-        ballManager.offCourse = false;
+        BallManager.Instance.goingTo = spikeToLocation;
+        BallManager.Instance.offCourse = false;
 
         // Play the spike sound for the bird
         AudioManager.PlayBirdSound(birdType, SoundType.SPIKE, 1.0f);
@@ -610,8 +606,8 @@ public class AIBehavior : MonoBehaviour
 
         // Set the ball's initial velocity and destination
         SetBallInitVelocity(ballRb, serveToLocation, 5.0f);
-        ballManager.goingTo = serveToLocation;
-        ballManager.offCourse = false;
+        BallManager.Instance.goingTo = serveToLocation;
+        BallManager.Instance.offCourse = false;
 
         // Update game manager fields
         GameManager.Instance.gameState = GameManager.GameState.Served;
