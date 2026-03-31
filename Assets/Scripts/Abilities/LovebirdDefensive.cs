@@ -2,6 +2,8 @@ using UnityEngine;
 using System.Collections;
 using UnityEngine.InputSystem;
 
+[RequireComponent(typeof(PlayerInput))]
+[RequireComponent(typeof(Rigidbody))]
 public class LovebirdDefensive : BirdAbility
 {
     [Header("Romantic Rush")]
@@ -17,15 +19,6 @@ public class LovebirdDefensive : BirdAbility
     {
         rb = GetComponent<Rigidbody>();
         playerInput = GetComponent<PlayerInput>();
-    }
-
-    public void ActivateAbility()
-    {
-        if (abilityReady && playerInput.actions.FindAction("Defensive Ability").WasPressedThisFrame())
-        {
-            StartCoroutine(RomanticRush());
-            abilityReady = false;
-        }
     }
 
     // Finds which GameObject is the Ally to player
@@ -93,9 +86,10 @@ public class LovebirdDefensive : BirdAbility
     void Update()
     {
         if (playerInput.actions.FindAction("Defensive Ability").WasPressedThisFrame() && abilityReady 
-            && !GameManager.Instance.gameState.Equals(GameManager.GameState.PointStart) && canUseAbilities())
+            && PointInProgress() && CanUseAbilities())
         {
-            ActivateAbility();
+            StartCoroutine(RomanticRush());
+            abilityReady = false;
         }
     }
 }

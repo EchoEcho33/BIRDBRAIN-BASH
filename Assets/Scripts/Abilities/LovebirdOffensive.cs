@@ -4,7 +4,8 @@ using System.Collections;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(BallInteract))]
-public class LoveBirdOffensive : MonoBehaviour
+[RequireComponent(typeof(PlayerInput))]
+public class LoveBirdOffensive : BirdAbility
 {
     public float DebuffLength = 4.0f; // Time in seconds the debuff lasts
     public int cooldown = 20; // Time in seconds the cooldown lasts
@@ -27,7 +28,8 @@ public class LoveBirdOffensive : MonoBehaviour
     void Update()
     {
         // If offensive ability pressed, debuff enemy
-        if (playerInput.actions.FindAction("Offensive Ability").WasPressedThisFrame())
+        if (!_onCooldown && PointInProgress() && CanUseAbilities()
+            && playerInput.actions.FindAction("Offensive Ability").WasPressedThisFrame())
         {
             DebuffEnemy();
         }
@@ -49,57 +51,54 @@ public class LoveBirdOffensive : MonoBehaviour
 
     public void DebuffEnemy()
     {
-        if (!_onCooldown)
+        _onCooldown = true;
+        StartCoroutine(Cooldown());
+
+        // Play offensive sound
+        AudioManager.PlayBirdSound(BirdType.LOVEBIRD, SoundType.OFFENSIVE, 1.0f);
+
+        // Trigger offensive ability animation if animator exists
+        var myBallInteract = GetComponent<BallInteract>();
+        if (myBallInteract != null && myBallInteract.animator != null)
         {
-            _onCooldown = true;
-            StartCoroutine(Cooldown());
-
-            // Play offensive sound
-            AudioManager.PlayBirdSound(BirdType.LOVEBIRD, SoundType.OFFENSIVE, 1.0f);
-
-            // Trigger offensive ability animation if animator exists
-            var myBallInteract = GetComponent<BallInteract>();
-            if (myBallInteract != null && myBallInteract.animator != null)
-            {
-                myBallInteract.animator.SetTrigger("OffensiveAbility");
-            }
-
-            // Gets opponents
-            GameManager gameManager = GameManager.Instance;
-            if (_onLeft)
-            {
-                opponents.Add(gameManager.rightPlayer1);
-                opponents.Add(gameManager.rightPlayer2);
-            } else
-            {
-                opponents.Add(gameManager.leftPlayer1);
-                opponents.Add(gameManager.leftPlayer2);
-            }
-
-            // Disables manual movement for AI and Players
-            foreach (GameObject opponent in opponents)
-            {
-                if (opponent.GetComponent<CharacterMovement>())
-                {
-                    opponent.GetComponent<CharacterMovement>().enabled = false;
-                    ParticleSystem heart = Instantiate(hearts, opponent.transform);
-                    heart.transform.position += new Vector3(0f, heartsOffset, 0f);
-                    heart.Play();
-                    _hearts.Add(heart);
-                }
-                if (opponent.GetComponent<AIBehavior>())
-                {
-                    opponent.GetComponent<AIBehavior>().enabled = false;
-                    ParticleSystem heart = Instantiate(hearts, opponent.transform);
-                    heart.transform.position += new Vector3(0f, heartsOffset, 0f);
-                    heart.Play();
-                    _hearts.Add(heart);
-                }
-            }
-            _debuffActive = true;
-
-            StartCoroutine(DebuffTimer());
+            myBallInteract.animator.SetTrigger("OffensiveAbility");
         }
+
+        // Gets opponents
+        GameManager gameManager = GameManager.Instance;
+        if (_onLeft)
+        {
+            opponents.Add(gameManager.rightPlayer1);
+            opponents.Add(gameManager.rightPlayer2);
+        } else
+        {
+            opponents.Add(gameManager.leftPlayer1);
+            opponents.Add(gameManager.leftPlayer2);
+        }
+
+        // Disables manual movement for AI and Players
+        foreach (GameObject opponent in opponents)
+        {
+            if (opponent.GetComponent<CharacterMovement>())
+            {
+                opponent.GetComponent<CharacterMovement>().enabled = false;
+                ParticleSystem heart = Instantiate(hearts, opponent.transform);
+                heart.transform.position += new Vector3(0f, heartsOffset, 0f);
+                heart.Play();
+                _hearts.Add(heart);
+            }
+            if (opponent.GetComponent<AIBehavior>())
+            {
+                opponent.GetComponent<AIBehavior>().enabled = false;
+                ParticleSystem heart = Instantiate(hearts, opponent.transform);
+                heart.transform.position += new Vector3(0f, heartsOffset, 0f);
+                heart.Play();
+                _hearts.Add(heart);
+            }
+        }
+        _debuffActive = true;
+
+        StartCoroutine(DebuffTimer());
     }
 
     private IEnumerator DebuffTimer()

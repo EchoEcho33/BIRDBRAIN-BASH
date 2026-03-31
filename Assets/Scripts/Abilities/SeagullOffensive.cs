@@ -5,6 +5,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(BallInteract))]
+[RequireComponent(typeof(CharacterMovement))]
+[RequireComponent(typeof(PlayerInput))]
 public class SeagullOffensive : BirdAbility
 {
     public int debuffLength; // Length of debuff in seconds
@@ -25,10 +27,6 @@ public class SeagullOffensive : BirdAbility
 
     void Update()
     {
-        if (!canUseAbilities()) {
-            Debug.Log("Ability has been disabled by the crow :(");
-            return;
-        }
         if (_debuffWindow && playerInput.actions.FindAction("Offensive Ability").WasPressedThisFrame() && CanMock())
         {
             DebuffEnemy();
@@ -37,7 +35,6 @@ public class SeagullOffensive : BirdAbility
 
     public void DebuffEnemy()
     {
-        Debug.Log("Debuffing enemies...");
         List<GameObject> opponents = new();
         if (_onLeft)
         {
@@ -111,6 +108,9 @@ public class SeagullOffensive : BirdAbility
 
     private bool CanMock()
     {
+        // If abilities are disabled for the seagull, cannot mock
+        if (!CanUseAbilities()) return false;
+
         // If the point hasn't just ended or point not about to start return false
         GameManager gameManager = GameManager.Instance;
         if (!gameManager.gameState.Equals(GameManager.GameState.PointStart) && !gameManager.gameState.Equals(GameManager.GameState.PointEnd))

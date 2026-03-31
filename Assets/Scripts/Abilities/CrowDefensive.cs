@@ -1,8 +1,8 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[RequireComponent(typeof(PlayerInput))]
 public class CrowDefensiveAbility : BirdAbility
 {
     public float cooldownTime; // Cooldown in seconds
@@ -30,15 +30,11 @@ public class CrowDefensiveAbility : BirdAbility
         //Check if conditions are met to activate ability
         InputAction statBuff = playerInput.actions.FindAction("Defensive Ability");
         GameManager gameManager = GameManager.Instance;
-        if (!onCooldown && !gameManager.gameState.Equals(GameManager.GameState.PointStart) && canUseAbilities()
-            && !gameManager.gameState.Equals(GameManager.GameState.PointEnd) && statBuff.WasPressedThisFrame())
+        if (!onCooldown &&  CanUseAbilities() && PointInProgress() && statBuff.WasPressedThisFrame())
         {
             CrowDefCall();
-        } else if (onCooldown && !gameManager.gameState.Equals(GameManager.GameState.PointStart)
-            && !gameManager.gameState.Equals(GameManager.GameState.PointEnd) && statBuff.WasPressedThisFrame())
-        {
-            Debug.Log("Defensive ability on cooldown (" + cooldownTimer + " seconds remaining)");
-        }
+        } 
+
         // Check if coins exist and if score has changed since last round, if so reset coin count
         if (oldScore != (ScoreManager.Instance.side1Score + ScoreManager.Instance.side2Score))
         {
