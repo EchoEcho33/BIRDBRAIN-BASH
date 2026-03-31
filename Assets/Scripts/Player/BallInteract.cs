@@ -115,15 +115,6 @@ public class BallInteract : MonoBehaviour
     // Check the game state in relation to the player
     private void CheckState()
     {
-        // Offensive ability activation (Toucan): allow activation regardless of CanHit()
-        if (playerInput.actions.FindAction("Offensive Ability").WasPressedThisFrame())
-        {
-            ToucanOffensive toucan = GetComponent<ToucanOffensive>();
-            if (toucan != null)
-            {
-                toucan.TouCanDoIt();
-            }
-        }
         // If the player can hit the ball
         if (CanHit())
         {
@@ -247,10 +238,11 @@ public class BallInteract : MonoBehaviour
         // The ball will be bumped a minimum of five units
         float height = MathF.Max(5.0f, ballRb.transform.position.y + 3.0f);
         
-        // Set the ball's intial velocity and destination
+        // Set the ball's intial velocity and destination and null out the unblockable owner
         SetBallInitVelocity(ballRb, bumpToLocation, height);
         BallManager.Instance.goingTo = bumpToLocation;
         BallManager.Instance.offCourse = false;
+        if (BallManager.Instance.unblockableOwner != null) BallManager.Instance.unblockableOwner = null;
 
         // Play the bump sound for the bird
         AudioManager.PlayBirdSound(birdType, SoundType.BUMP, 1.0f);
@@ -344,15 +336,6 @@ public class BallInteract : MonoBehaviour
         SetBallInitVelocity(ballRb, spikeToLocation, -1.0f);
         BallManager.Instance.goingTo = spikeToLocation;
         BallManager.Instance.offCourse = false;
-
-        // If this player has an offensive Toucan ability active, mark this spike unblockable
-        ToucanOffensive toucan = GetComponent<ToucanOffensive>();
-        if (toucan != null && toucan.abilityActive)
-        {
-            BallManager.Instance.unblockableOwner = gameObject;
-            toucan.abilityActive = false; // consume ability on spike
-            Debug.Log("Spike marked unblockable by Toucan offensive ability.");
-        }
 
         // Play the spike sound for the bird
         AudioManager.PlayBirdSound(birdType, SoundType.SPIKE, 1.0f);

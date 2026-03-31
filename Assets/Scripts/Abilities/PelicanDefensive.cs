@@ -2,82 +2,68 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[RequireComponent(typeof(PlayerInput))]
+[RequireComponent(typeof(BallInteract))]
 public class PelicanDefensive : BirdAbility
 {
     public float cooldown; // Cooldown in seconds
-    public int holdLength; // Amount the ability increases ally's stats
+    public int holdLength; // Maximum amount of time in seconds the pelican can hold the ball in its mouth
     public BallInteract ballInteract;
     private bool onCooldown = false;
     private bool isBallEaten = false;
     private PlayerInput playerInput;
 
-    void Update()
-    {
-        if (playerInput == null) return;
-        // If pressed defensive ability button, activate ability
-        if (!onCooldown && playerInput.actions.FindAction("Defensive Ability").WasPressedThisFrame() && canUseAbilities())
-        {
-            EatTheBall();
-        }
-        if (isBallEaten && playerInput.actions.FindAction("Serve").WasPressedThisFrame())
-        {
-            Debug.Log("Pelican released the ball manually.");
-            
-            BallManager.Instance.gameObject.SetActive(true);
-            isBallEaten = false;
-            
-        }
-        if (isBallEaten)
-        {
-            BallManager.Instance.gameObject.transform.position = transform.position + new Vector3(0, 1f, 0);
-        }
-        
-    }
-    
     public void Start()
     {
         ballInteract = GetComponent<BallInteract>();
         playerInput = GetComponent<PlayerInput>();
     }
 
+    void Update()
+    {
+        if (playerInput == null) return;
+
+        // If pressed defensive ability button, activate ability
+        if (!onCooldown && playerInput.actions.FindAction("Defensive Ability").WasPressedThisFrame() && CanUseAbilities())
+        {
+            EatTheBall();
+        }
+
+        if (isBallEaten && playerInput.actions.FindAction("Serve").WasPressedThisFrame())
+        {
+            BallManager.Instance.gameObject.SetActive(true);
+            isBallEaten = false;
+        }
+
+        if (isBallEaten)
+        {
+            BallManager.Instance.gameObject.transform.position = transform.position + new Vector3(0, 1f, 0);
+        }
+        
+    }
+
     public void EatTheBall()
     {
-        // Only runs if not on cooldown
-        if (!onCooldown)
+        GameManager gameManager = GameManager.Instance;
+        bool validState = gameManager.gameState == GameManager.GameState.PointStart;
+        if (validState && gameManager.server == gameObject)
         {
-            GameManager gameManager = GameManager.Instance;
-            bool validState = gameManager.gameState == GameManager.GameState.PointStart
-                || gameManager.gameState == GameManager.GameState.Served
-                || gameManager.gameState == GameManager.GameState.Set;
-            if (validState && gameManager.server == gameObject)
+            // Play defensive sound
+            AudioManager.PlayBirdSound(BirdType.PELICAN, SoundType.DEFENSIVE, 1.0f);
+
+            // Trigger defensive ability animation if animator exists
+            var myBallInteract = GetComponent<BallInteract>();
+            if (myBallInteract != null && myBallInteract.animator != null)
             {
-                // Play defensive sound
-                AudioManager.PlayBirdSound(BirdType.PELICAN, SoundType.DEFENSIVE, 1.0f);
-
-                // Trigger defensive ability animation if animator exists
-                var myBallInteract = GetComponent<BallInteract>();
-                if (myBallInteract != null && myBallInteract.animator != null)
-                {
-                    myBallInteract.animator.SetTrigger("DefensiveAbility");
-                }
-
-                Debug.Log($"Pelican has eaten the ball. State: {gameManager.gameState}");
-                
-                ballInteract.ServeBall();
-                BallManager.Instance.gameObject.SetActive(false);
-                isBallEaten = true;
-
-                StartCoroutine(Cooldown());
-                StartCoroutine(HoldTime());
+                myBallInteract.animator.SetTrigger("DefensiveAbility");
             }
-            else
-            {
-                Debug.Log($"Pelican cannot eat the ball in state: {gameManager.gameState} or not server.");
-            }
-        }
-        else
-        {
-            Debug.Log("Pelican Defensive is on cooldown!");
+
+            ballInteract.ServeBall();
+            BallManager.Instance.gameObject.SetActive(false);
+            isBallEaten = true;
+
+            StartCoroutine(Cooldown());
+            StartCoroutine(HoldTime());
         }
     }
 
@@ -97,6 +83,5 @@ public class PelicanDefensive : BirdAbility
         BallManager.Instance.gameObject.SetActive(true);
         isBallEaten = false;
         ballInteract.ServeBall();
-        Debug.Log("Pelican hold length is up!");
     }
 }

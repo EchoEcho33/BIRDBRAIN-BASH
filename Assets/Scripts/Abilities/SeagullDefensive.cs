@@ -2,6 +2,9 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[RequireComponent(typeof(PlayerInput))]
+[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(BallInteract))]
 public class SeagullDefensive : BirdAbility
 {
     [Header("Mine Mine Mine Ability")]
@@ -24,70 +27,51 @@ public class SeagullDefensive : BirdAbility
     {
         if (!isAbilityReady)
         {
-            Debug.Log("SeagullDefensive: Ability not ready (cooldown).");
             return;
         }
         GameManager gameManager = GameManager.Instance;
         if (gameManager.gameState == GameManager.GameState.PointStart && gameManager.server == gameObject)
         {
-            Debug.Log("SeagullDefensive: Can't dash while serving at point start.");
             return;
         }
         if (gameManager.gameState == GameManager.GameState.Served && gameManager.server == gameObject)
         {
-            Debug.Log("SeagullDefensive: Can't dash after serve by your side.");
             return;
         }
-        if (!canUseAbilities())
+        if (!CanUseAbilities())
         {
-            Debug.Log("SeagullDefensive: Abilities are disabled.");
             return;
         }
-        Debug.Log("SeagullDefensive: Passed all checks, checking CanDashToBall...");
         if (CanDashToBall())
         {
-            Debug.Log("SeagullDefensive: CanDashToBall is TRUE, starting dash.");
             StartCoroutine(DashToBall());
         }
-        else
+    }
+
+    private bool CanDashToBall()
+    {
+        // Check if ball is on the player's side
+        bool onLeft = GetComponent<BallInteract>().onLeft;
+        float ballX = BallManager.Instance.gameObject.transform.position.x;
+        bool ballOnMySide = (onLeft && ballX < 0) || (!onLeft && ballX > 0);
+
+        if (!ballOnMySide)
         {
-            Debug.Log("SeagullDefensive: CanDashToBall is FALSE, dash not started.");
+            return false;
         }
+
+        // Allow dashing during any active play state where the ball is in motion
+        GameManager.GameState state = GameManager.Instance.gameState;
+        bool validState = state == GameManager.GameState.Spiked ||
+                        state == GameManager.GameState.Blocked ||
+                        state == GameManager.GameState.Bumped ||
+                        state == GameManager.GameState.Set;
+
+        return validState;
     }
-
-private bool CanDashToBall()
-{
-    // Check if ball is on the player's side
-    bool onLeft = GetComponent<BallInteract>().onLeft;
-    float ballX = BallManager.Instance.gameObject.transform.position.x;
-    bool ballOnMySide = (onLeft && ballX < 0) || (!onLeft && ballX > 0);
-
-    if (!ballOnMySide)
-    {
-        Debug.Log($"SeagullDefensive: Ball NOT on my side (onLeft={onLeft}, ballX={ballX})");
-        return false;
-    }
-
-    // Allow dashing during any active play state where the ball is in motion
-    GameManager.GameState state = GameManager.Instance.gameState;
-    bool validState = state == GameManager.GameState.Spiked ||
-                      state == GameManager.GameState.Blocked ||
-                      state == GameManager.GameState.Bumped ||
-                      state == GameManager.GameState.Set;
-
-    if (!validState)
-    {
-        Debug.Log($"SeagullDefensive: Invalid game state for dash: {state}");
-        return false;
-    }
-
-    return true;
-}
-
     
     private IEnumerator DashToBall()
     {
-
         isAbilityReady = false;
 
         // Play defensive sound
@@ -95,7 +79,7 @@ private bool CanDashToBall()
 
         // Trigger defensive ability animation if animator exists
         var myBallInteract = GetComponent<BallInteract>();
-        if (myBallInteract != null && myBallInteract.animator != null)
+        if (myBallInteract.animator != null)
         {
             myBallInteract.animator.SetTrigger("DefensiveAbility");
         }
@@ -110,8 +94,6 @@ private bool CanDashToBall()
         
         float fixedY = 0.5f;
         
-        Rigidbody ballRb = BallManager.Instance.gameObject.GetComponent<Rigidbody>();
-
         //Freeze Y so the dash stays level
         rb.constraints = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionY;
 
@@ -150,14 +132,12 @@ private bool CanDashToBall()
             yield return null;
         }
 
-        //Ensure penguin/seagull is exactly on the landing spot at a fixed Y
+        //Ensure seagull is exactly on the landing spot at a fixed Y
         rb.MovePosition(new Vector3(BallManager.Instance.goingTo.x, fixedY, BallManager.Instance.goingTo.z));
 
         BallInteract ballInteract = GetComponent<BallInteract>();
-        if (ballInteract != null)
-        {
-            ballInteract.BumpBall();
-        }
+        ballInteract.BumpBall();
+
         //Unfreeze Y movments
         rb.constraints = RigidbodyConstraints.FreezeRotation;
 
@@ -181,7 +161,7 @@ private bool CanDashToBall()
                 if (otherRb != null && !otherRb.isKinematic)
                 {
                     //gets the direction
-                    Vector3 pushDirection = (hit.transform.position - transform.position);
+                    Vector3 pushDirection = hit.transform.position - transform.position;
                     pushDirection.y = 0; // ignore vertical
                     pushDirection.Normalize();
 
@@ -191,8 +171,6 @@ private bool CanDashToBall()
         }
     }
 
-    
-
     //Update is called once per frame
     void Update()
     {
@@ -201,12 +179,13 @@ private bool CanDashToBall()
             ActivateAbility();
         }
     }
+
     private IEnumerator CooldownRoutine()
     {
-    // Wait for the cooldown time
-    yield return new WaitForSeconds(cooldown);
+        // Wait for the cooldown time
+        yield return new WaitForSeconds(cooldown);
 
-    // After waiting, the ability is ready again
-    isAbilityReady = true;
+        // After waiting, the ability is ready again
+        isAbilityReady = true;
     }
 }

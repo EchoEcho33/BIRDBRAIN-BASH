@@ -1,14 +1,15 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[RequireComponent(typeof(PlayerInput))]
+[RequireComponent(typeof(BallInteract))]
+[RequireComponent(typeof(CharacterMovement))]
 public class ToucanDefensive : BirdAbility
 {
-    [SerializeField]
     public float cooldown; // Cooldown in seconds
-    [SerializeField]
     public int buffAmount; // Amount the ability increases ally's stats
-    [SerializeField]
     public int buffLength; // Amount of time in seconds the buff lasts
     private bool _onLeft;
 
@@ -18,7 +19,8 @@ public class ToucanDefensive : BirdAbility
     void Update()
     {
         // If pressesd defensive ability button, activate ability
-        if (canUseAbilities() && playerInput.actions.FindAction("Defensive Ability").WasPressedThisFrame())
+        if (!onCooldown && playerInput.actions.FindAction("Defensive Ability").WasPressedThisFrame()
+            && CanUseAbilities() && PointInProgress())
         {
             TouCanDoIt();
         }
@@ -32,47 +34,50 @@ public class ToucanDefensive : BirdAbility
 
     public void TouCanDoIt()
     {
-        // Only runs if not on cooldown
-        if (!onCooldown)
+        GameObject teammate;
+
+        // Finds the teammate to buff
+        GameManager gameManager = GameManager.Instance;
+        if (_onLeft)
         {
-            Debug.Log("Tou-Can Do It!!! :D");
-
-            GameObject teammate = null;
-
-            // Finds the teammate to buff
-            GameManager gameManager = GameManager.Instance;
-            if (_onLeft)
+            GameObject leftPlayer1 = gameManager.leftPlayer1;
+            GameObject leftPlayer2 = gameManager.leftPlayer2;
+            if (leftPlayer1 != this)
             {
-                GameObject leftPlayer1 = gameManager.leftPlayer1;
-                GameObject leftPlayer2 = gameManager.leftPlayer2;
-                if (leftPlayer1 != this)
-                {
-                    teammate = leftPlayer1;
-                } else
-                {
-                    teammate = leftPlayer2;
-                }
+                teammate = leftPlayer1;
             } else
             {
-                GameObject rightPlayer1 = gameManager.rightPlayer1;
-                GameObject rightPlayer2 = gameManager.rightPlayer2;
-                if (rightPlayer1 != this)
-                {
-                    teammate = rightPlayer1;
-                } else
-                {
-                    teammate = rightPlayer2;
-                }
+                teammate = leftPlayer2;
             }
-
-            // Applies buff
-            teammate.GetComponent<CharacterMovement>().BuffStats(buffAmount, buffLength);
-            
-            StartCoroutine(Cooldown());
         } else
         {
-            Debug.Log("On Cooldown :C");
+            GameObject rightPlayer1 = gameManager.rightPlayer1;
+            GameObject rightPlayer2 = gameManager.rightPlayer2;
+            if (rightPlayer1 != this)
+            {
+                teammate = rightPlayer1;
+            } else
+            {
+                teammate = rightPlayer2;
+            }
         }
+
+        // Applies buff to player and teammate
+        GetComponent<CharacterMovement>().BuffStats(buffAmount, buffLength);
+        try // Human teammate
+        {
+            teammate.GetComponent<CharacterMovement>().BuffStats(buffAmount, buffLength);
+        }
+        catch (NullReferenceException) // AI teammate
+        {
+            teammate.GetComponent<AIBehavior>().BuffStats(buffAmount, buffLength);
+        }
+        catch (Exception) // Idk how you get here, ggs ig
+        {
+            Debug.LogError("Something went wrong when buffing teammate stats for Toucan Defensive...");
+        }
+        
+        StartCoroutine(Cooldown());
     }
 
     // Cools down cooldown seconds

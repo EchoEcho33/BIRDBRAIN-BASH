@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Collections;
 
 [RequireComponent(typeof(PlayerInput))]
 
@@ -10,15 +11,12 @@ public class PelicanOffensive : BirdAbility
     [Header("Mouth Offset")]
     [SerializeField] private float mouthForwardOffset = 1.0f;
     [SerializeField] private float mouthUpOffset = 1.5f;
-    [SerializeField]
-    private float cooldown = 30f; // Cooldown in seconds (30 because the fish disappears after 15s, so 15s cooldown after that)
+    [SerializeField] private float cooldown = 30f; // Cooldown in seconds (30 because the fish disappears after 15s, so 15s cooldown after that)
+
+    [SerializeField] private float slipFishSpeed = 15f; // Speed at which the fish is spit out
+    [SerializeField] private float fishLifetime = 15f;
+    [SerializeField] private GameObject fishPrefab; // assign in inspector until there's a permanent spot for it
     private bool onCooldown = false;
-    [SerializeField]
-    private float slipFishSpeed = 15f; // Speed at which the fish is spit out
-    [SerializeField]
-    private float fishLifetime = 15f;
-    [SerializeField]
-    private GameObject fishPrefab; // assign in inspector until there's a permanent spot for it
     private PlayerInput playerInput;
 
     private void Awake() 
@@ -30,7 +28,8 @@ public class PelicanOffensive : BirdAbility
     private void Update()
     {
         // If pressed offensive ability button, activate ability
-        if (playerInput.actions.FindAction("Offensive Ability").WasPressedThisFrame() && !onCooldown && canUseAbilities())
+        if (playerInput.actions.FindAction("Offensive Ability").WasPressedThisFrame() && !onCooldown
+            && CanUseAbilities() && PointInProgress())
         {
             SlipFish();
         }      
@@ -74,7 +73,7 @@ public class PelicanOffensive : BirdAbility
         StartCoroutine(Cooldown());
     }
 
-    private System.Collections.IEnumerator Cooldown()
+    private IEnumerator Cooldown()
     {
         yield return new WaitForSeconds(cooldown);
         onCooldown = false;

@@ -1,31 +1,33 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
+[RequireComponent(typeof(PlayerInput))]
+[RequireComponent(typeof(BallInteract))]
 public class ToucanOffensive : BirdAbility
 {
-    [SerializeField]
     public float cooldown = 10f; // Cooldown in seconds (TBA)
     
-    // When true the next spike by this character will be unblockable
-    [HideInInspector]
-    public bool abilityActive = false;
     private bool onCooldown = false;
+    private PlayerInput playerInput; // Input for this player
 
-    // Activate the ability: next spike becomes unblockable
-    public void TouCanDoIt()
+    void Update()
     {
-        if (!canUseAbilities()) {
-            Debug.Log("Ability has been disabled by the crow :(");
-            return;
-        }
-        if (onCooldown)
+        // Offensive ability activation (Toucan): allow activation regardless of CanHit()
+        if (!onCooldown && playerInput.actions.FindAction("Offensive Ability").WasPressedThisFrame()
+            && CanUseAbilities() && GameManager.Instance.gameState == GameManager.GameState.Set)
         {
-            Debug.Log("Toucan Offense on cooldown");
-            return;
+            TacoTocoToca();
         }
+    }
+    // Activate the ability: next spike becomes unblockable
+    public void TacoTocoToca()
+    {
+        // Set the unblockable owner of the ball to this player
+        BallManager.Instance.unblockableOwner = gameObject;
 
-        abilityActive = true;
-        Debug.Log("Toucan offensive ability activated: next spike is unblockable");
+        // Spike the ball
+        GetComponent<BallInteract>().SpikeBall();
 
         StartCoroutine(Cooldown());
     }
