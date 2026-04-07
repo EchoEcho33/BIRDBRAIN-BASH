@@ -24,7 +24,7 @@ public class OwlOffensive : MonoBehaviour
         // Draw line in enemy court for lineDuration seconds, then remove line and start cooldown
         if (transform.position.x > 0) // Facing right, so line goes in right court
         {
-            StartCoroutine(DrawLine(new Vector3(0, 0.1f, 0), new Vector3(9, 0.1f, 0)));
+            StartCoroutine(DrawLine(new Vector3(0, 0.1f, 0), new Vector3(-9, 0.1f, 0)));
         }
         else // Facing left, so line goes in left court
         {
