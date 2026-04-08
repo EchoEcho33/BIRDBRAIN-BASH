@@ -24,7 +24,8 @@ public class OwlDefensive : BirdAbility
     private bool onCooldown = false;
     private Vector3[] predictionPoints;
 
-    private void Awake() {
+    private void Awake() 
+    {
         GameObject ball = GameObject.FindWithTag("Ball");
         ballTransform = ball.transform;
         ballRigidbody = ball.GetComponent<Rigidbody>();
