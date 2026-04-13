@@ -6,9 +6,7 @@ using TMPro;
 
 public class HUDManager : MonoBehaviour
 {
-    // -------------------------------------------------------------------------
     // Ability Icon UI — replaces the plain RawImage references for abilities
-    // -------------------------------------------------------------------------
 
     [System.Serializable]
     public class AbilityIconUI
@@ -70,9 +68,7 @@ public class HUDManager : MonoBehaviour
         }
     }
 
-    // -------------------------------------------------------------------------
     // Player Card UI
-    // -------------------------------------------------------------------------
 
     [System.Serializable]
     public class PlayerCardUI
@@ -90,9 +86,7 @@ public class HUDManager : MonoBehaviour
     public PlayerCardUI player3Card;
     public PlayerCardUI player4Card;
 
-    // -------------------------------------------------------------------------
     // Bird Inspector Fields
-    // -------------------------------------------------------------------------
 
     [Header("Penguin")]
     [SerializeField] private string penguinDisplayName = "Penguin";
@@ -160,9 +154,6 @@ public class HUDManager : MonoBehaviour
     [SerializeField] private Texture kiwiOffensiveIcon;
     [SerializeField] private Texture kiwiDefensiveIcon;
 
-    // -------------------------------------------------------------------------
-    // Internal
-    // -------------------------------------------------------------------------
 
     private static HUDManager instance;
     public static HUDManager Instance => instance;
@@ -179,9 +170,6 @@ public class HUDManager : MonoBehaviour
         public Texture defensiveIcon;
     }
 
-    // -------------------------------------------------------------------------
-    // Unity Lifecycle
-    // -------------------------------------------------------------------------
 
     private void Awake()
     {
@@ -193,10 +181,6 @@ public class HUDManager : MonoBehaviour
     {
         PopulatePlayerCards();
     }
-
-    // -------------------------------------------------------------------------
-    // Setup
-    // -------------------------------------------------------------------------
 
     private void PopulatePlayerCards()
     {
@@ -237,9 +221,7 @@ public class HUDManager : MonoBehaviour
         if (card.defensiveAbility?.baseIcon != null)        card.defensiveAbility.baseIcon.texture = data.defensiveIcon;
     }
 
-    // -------------------------------------------------------------------------
-    // Public Cooldown API — call these from your bird ability scripts
-    // -------------------------------------------------------------------------
+    // Public Cooldown API — call these from bird ability scripts
 
     /// <summary>
     /// Triggers the offensive ability cooldown animation for a given player.
@@ -257,11 +239,9 @@ public class HUDManager : MonoBehaviour
         offensiveCooldowns[playerIndex] = StartCoroutine(icon.RunCooldown(duration));
     }
 
-    /// <summary>
     /// Triggers the defensive ability cooldown animation for a given player.
     /// Call this right when the player uses their defensive ability.
     /// Example: HUDManager.Instance.TriggerDefensiveCooldown(playerIndex, 5f);
-    /// </summary>
     public void TriggerDefensiveCooldown(int playerIndex, float duration)
     {
         AbilityIconUI icon = GetDefensiveIcon(playerIndex);
@@ -273,10 +253,8 @@ public class HUDManager : MonoBehaviour
         defensiveCooldowns[playerIndex] = StartCoroutine(icon.RunCooldown(duration));
     }
 
-    /// <summary>
     /// Cancels any running cooldown and resets the icon immediately.
     /// Useful if a cooldown reduction effect fires mid-cooldown.
-    /// </summary>
     public void ResetOffensiveCooldown(int playerIndex)
     {
         if (offensiveCooldowns[playerIndex] != null)
@@ -295,9 +273,7 @@ public class HUDManager : MonoBehaviour
         icon?.ResetImmediately();
     }
 
-    // -------------------------------------------------------------------------
     // Helpers
-    // -------------------------------------------------------------------------
 
     private AbilityIconUI GetOffensiveIcon(int playerIndex)
     {
