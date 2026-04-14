@@ -30,6 +30,7 @@ public class PukekoOffensiveAbility : BirdAbility
     {
         if (!onCooldown)
         {
+            // Debug.Log("Pukeko Offensive Ability Activated: Sonic Squawk");
             onCooldown = true;
             StartCoroutine(SonicSquawk());
         }
@@ -43,9 +44,27 @@ public class PukekoOffensiveAbility : BirdAbility
             float angle = -coneAngle / 2 + coneAngle / (coneRayCount - 1) * i; // Split into equal segments
             Vector3 direction = Quaternion.Euler(0, angle, 0) * transform.forward; // Offset from where bird is facing
             int hitCount = Physics.RaycastNonAlloc(transform.position, direction, hits, coneRange);
+            Debug.DrawRay(transform.position, direction * coneRange, Color.blue, 40f); // Debug for visualization
             for (int j = 0; j < hitCount; j++)
             {
-                if (hits[j].collider.CompareTag("Bird"))
+                // Visualization - low key kinda sux but i don't really know how to fix
+                // Debug.DrawLine(transform.position, hits[j].point, Color.red, 40f); // Debug
+                LineRenderer cone = new GameObject("Cone").AddComponent<LineRenderer>();
+                cone.positionCount = 2;
+                cone.SetPosition(0, transform.position);
+                for (int k = 0; k <= coneRayCount; k++)
+                {
+                    float x = Mathf.Sin(Mathf.Deg2Rad * (angle + coneAngle / 2 * k / coneRayCount)) * coneRange;
+                    float y = Mathf.Cos(Mathf.Deg2Rad * (angle + coneAngle / 2 * k / coneRayCount)) * coneRange;
+                    cone.SetPosition(1, transform.position + new Vector3(x, y, 0));
+                }
+                cone.loop = true;
+                cone.startWidth = 0.1f;
+                cone.endWidth = 0.1f;
+                cone.material = new Material(Shader.Find("Sprites/Default")) { color = Color.red };
+                Destroy(cone.gameObject, 0.5f); // Clean up after a short time
+
+                if (hits[j].collider.CompareTag("Player") && hits[j].collider.gameObject != gameObject)
                 {
                     // Apply silence effect to the bird
                     if (hits[j].collider.TryGetComponent<BirdAbility>(out var birdAbility))
