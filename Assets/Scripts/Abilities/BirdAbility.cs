@@ -7,6 +7,7 @@ public class BirdAbility : MonoBehaviour {
     protected GameManager gameManager = GameManager.Instance; // ducky: GameManager instance for all abilities in case anyone needs it
     protected List<GameObject> opponents = new(); // ducky: opponents list for all abilities in case anyone needs it
     protected bool _onLeft; // ducky: for opponents if needed
+    private bool isStunned = false;
 
     public void DisableAbilities(bool disabledOrNot)
     {
@@ -16,6 +17,12 @@ public class BirdAbility : MonoBehaviour {
     public bool CanUseAbilities()
     {
         return !abilitiesDisabled;
+    }
+    public bool stunned() {
+        return isStunned;
+    }
+    public void stun(bool stunned) {
+        isStunned = stunned;
     }
 
     public bool PointInProgress()
