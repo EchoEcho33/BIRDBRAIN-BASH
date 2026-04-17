@@ -18,12 +18,7 @@ public class BirdAbility : MonoBehaviour {
     {
         return !abilitiesDisabled;
     }
-    public bool stunned() {
-        return isStunned;
-    }
-    public void stun(bool stunned) {
-        isStunned = stunned;
-    }
+    
 
     public bool PointInProgress()
     {

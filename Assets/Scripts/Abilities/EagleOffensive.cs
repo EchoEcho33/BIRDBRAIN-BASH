@@ -57,7 +57,7 @@ public class EagleOffensive : BirdAbility
             BirdAbility ability = opponent.GetComponent<BirdAbility>();
             if (ability != null)
             {
-                ability.stun(true);
+                ability.abilitiesDisabled(true);
             }
         }
 
@@ -71,7 +71,7 @@ public class EagleOffensive : BirdAbility
             BirdAbility ability = opponent.GetComponent<BirdAbility>();
             if (ability != null)
             {
-                ability.stun(false);
+                ability.abilitiesDisabled(false);
             }
         }
     }
