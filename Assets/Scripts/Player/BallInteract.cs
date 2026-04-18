@@ -135,7 +135,7 @@ public class BallInteract : MonoBehaviour
                     }
                     
                     // If the player is close enough to the ball and is pressing the bump button, bump the ball
-                    else if (IsPlayerNearBall() && playerInput.actions.FindAction("Bump").WasPressedThisFrame())
+                    else if (IsPlayerNearBall() && playerInput.actions.FindAction("Defensive Action").WasPressedThisFrame())
                     {
                         BumpBall();
                     }
@@ -143,7 +143,7 @@ public class BallInteract : MonoBehaviour
 
                 case GameManager.GameState.Served:
                     // If the player is close enough to the ball and is pressing the bump button, bump the ball
-                    if (IsPlayerNearBall() && playerInput.actions.FindAction("Bump").WasPressedThisFrame())
+                    if (IsPlayerNearBall() && playerInput.actions.FindAction("Defensive Action").WasPressedThisFrame())
                     {
                         BumpBall();
                     }
@@ -151,7 +151,7 @@ public class BallInteract : MonoBehaviour
                 // Ball has just been bumped
                 case GameManager.GameState.Bumped:
                     // If the player is close enough to the ball and is pressing the set button, set the ball
-                    if (IsPlayerNearBall() && playerInput.actions.FindAction("Set").WasPressedThisFrame())
+                    if (IsPlayerNearBall() && playerInput.actions.FindAction("Defensive Action").WasPressedThisFrame())
                     {
                         SetBall();
                     }
@@ -159,7 +159,7 @@ public class BallInteract : MonoBehaviour
                 // Ball has just been set
                 case GameManager.GameState.Set:
                     // If the player is close enough to the ball and is pressing the spike button, spike the ball
-                    if (IsPlayerNearBall() && playerInput.actions.FindAction("Spike").WasPressedThisFrame())
+                    if (IsPlayerNearBall() && playerInput.actions.FindAction("Offensive Action").WasPressedThisFrame())
                     {
                         SpikeBall();
                     }
@@ -188,7 +188,7 @@ public class BallInteract : MonoBehaviour
                         serverMovement.controlMovement(true, true);
                     }
                     // If this player is the one serving and they press the serve button, serve the ball
-                    if (GameManager.Instance.server == gameObject && playerInput.actions.FindAction("Serve").WasPressedThisFrame())
+                    if (GameManager.Instance.server == gameObject && playerInput.actions.FindAction("Offensive Action").WasPressedThisFrame())
                     {
                         ServeBall();
                     }
@@ -282,6 +282,9 @@ public class BallInteract : MonoBehaviour
     // Set the ball
     private void SetBall()
     {
+        // If the ball's velocity is not coming down, then you can't set the ball
+        if (BallManager.Instance.gameObject.GetComponent<Rigidbody>().linearVelocity.y >= 0) return;
+        
         // Set the setting location to middle of court as default
         setToLocation = new Vector3(2f, 0f, 0f);
         if (onLeft)

@@ -3,6 +3,8 @@ using System.Collections;
 using UnityEngine.Events;
 using TMPro;
 using System;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class ScoreManager : MonoBehaviour
 {
@@ -20,6 +22,24 @@ public class ScoreManager : MonoBehaviour
     [Header("Serve Indicator")]
     public GameObject side1ServeIndicator;
     public GameObject side2ServeIndicator;
+
+    [Header("Cameras")]
+    public Camera mainCamera;
+    public Camera endCamera;
+
+    [Header("Main UI Stuff")]
+    public GameObject scoreboard;
+    public GameObject birdBars;
+
+    [Header("End Screen Stuff")]
+    public RawImage fadeScreen;
+    public RawImage blueWin;
+    public RawImage pinkWin;
+    public TMP_Text blueWinScore;
+    public TMP_Text pinkWinScore;
+    public GameObject invisWall;
+    public Transform[] endLocations;
+    public bool[] readiedUp;
    
     private bool leftLastScored;
     private bool inPlay;
@@ -48,6 +68,24 @@ public class ScoreManager : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        // Make sure the invisible wall is in the right spot and the end screens aren't showing
+        invisWall.transform.position = new Vector3(16, -0.2f, -0.08f);
+        fadeScreen.color = new Color(0, 0, 0, 0);
+        blueWin.enabled = false;
+        pinkWin.enabled = false;
+        blueWinScore.enabled = false;
+        pinkWinScore.enabled = false;
+
+        // Make sure main camera is enabled
+        endCamera.enabled = false;
+        endCamera.GetComponent<AudioListener>().enabled = false;
+        mainCamera.enabled = true;
+        mainCamera.GetComponent<AudioListener>().enabled = true;
+
+        // Make sure main UI stuff is enabled
+        scoreboard.SetActive(true);
+        birdBars.SetActive(true);
+
         // Set the scores to 0, right to serve, and the ball is in play
         side1Score = 0;
         side2Score = 0;
@@ -168,11 +206,13 @@ public class ScoreManager : MonoBehaviour
         {
             Debug.Log("Side 1 wins the match!");
             inPlay = false;
+            StartCoroutine(TransitionToEnd(true));
         }
         else if (side2SetsWon == 2)
         {
             Debug.Log("Side 2 wins the match!");
             inPlay = false;
+            StartCoroutine(TransitionToEnd(false));
         }
         else
         {
@@ -317,5 +357,76 @@ public class ScoreManager : MonoBehaviour
         {
             return bird.GetComponent<AIBehavior>().GetBirdType();
         }
+    }
+
+    private IEnumerator TransitionToEnd(bool leftSideJustWon)
+    {
+        // Fade to black
+        float time = 0.0f;
+        while (time < 2.0f)
+        {
+            time += Time.deltaTime;
+            fadeScreen.color = new Color(0, 0, 0, time / 2.0f);
+            yield return null;
+        }
+        
+        // Indicate end of game
+        GameManager.Instance.gameState = GameManager.GameState.GameOver;
+
+        // Switch cameras
+        endCamera.enabled = true;
+        endCamera.GetComponent<AudioListener>().enabled = true;
+        mainCamera.enabled = false;
+        mainCamera.GetComponent<AudioListener>().enabled = false;
+
+        // Move the back wall
+        invisWall.transform.position = new Vector3(26, -0.2f, -0.08f);
+
+        // Disable the game UI elements
+        scoreboard.SetActive(false);
+        birdBars.SetActive(false);
+
+        // Move all of the birds and show the correct screen
+        if (leftSideJustWon)
+        {
+            GameManager.Instance.leftPlayer1.transform.position = endLocations[0].position;
+            GameManager.Instance.leftPlayer2.transform.position = endLocations[1].position;
+            GameManager.Instance.rightPlayer1.transform.position = endLocations[2].position;
+            GameManager.Instance.rightPlayer2.transform.position = endLocations[3].position;
+            blueWin.enabled = true;
+            blueWinScore.text = $"{side1SetsWon}-{side2SetsWon}";
+            blueWinScore.enabled = true;
+        }
+        else
+        {
+            GameManager.Instance.rightPlayer1.transform.position = endLocations[0].position;
+            GameManager.Instance.rightPlayer2.transform.position = endLocations[1].position;
+            GameManager.Instance.leftPlayer1.transform.position = endLocations[2].position;
+            GameManager.Instance.leftPlayer2.transform.position = endLocations[3].position;
+            pinkWin.enabled = true;
+            pinkWinScore.text = $"{side1SetsWon}-{side2SetsWon}";
+            pinkWinScore.enabled = true;
+        }
+
+        // Fade out of black
+        time = 0.0f;
+        while (time < 2.0f)
+        {
+            time += Time.deltaTime;
+            fadeScreen.color = new Color(0, 0, 0, 1 - time / 2.0f);
+            yield return null;
+        }
+    }
+
+    public void CheckReturnToMenu()
+    {
+        // Iterate over readied up array to see if anyone is not readied up
+        foreach (bool isReady in readiedUp)
+        {
+            if (!isReady) return;
+        }
+
+        // Everyone is ready, go back to main menu
+        SceneManager.LoadScene("MainMenu");
     }
 }
